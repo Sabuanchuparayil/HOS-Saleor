@@ -20,8 +20,6 @@
     "release-it": "^19.0.4"
   },
   "scripts": {
-    "release": "release-it",
-    "check-vars": "node check-railway-vars.js",
-    "check-vars-railway": "railway run node check-railway-vars.js"
+    "release": "release-it"
   }
 }

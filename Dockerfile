@@ -47,9 +47,6 @@ COPY --from=build-python /usr/local/bin/ /usr/local/bin/
 COPY . /app
 WORKDIR /app
 
-# Ensure startup script is executable
-RUN chmod +x /app/start.sh
-
 ARG STATIC_URL
 ENV STATIC_URL=${STATIC_URL:-/static/}
 RUN SECRET_KEY=dummy STATIC_URL=${STATIC_URL} python3 manage.py collectstatic --no-input
@@ -64,10 +61,5 @@ LABEL org.opencontainers.image.title="saleor/saleor" \
   org.opencontainers.image.authors="Saleor Commerce (https://saleor.io)" \
   org.opencontainers.image.licenses="BSD-3-Clause"
 
-# Railway-compatible: Use startup script with shell to properly expand environment variables
-# Also install an argument-safe uvicorn wrapper to handle cases where '--port=$PORT' is passed literally.
-COPY scripts/uvicorn_wrapper.py /usr/local/bin/uvicorn
-RUN chmod +x /usr/local/bin/uvicorn
-
-# Ensure start.sh is always the entrypoint (even if Railway overrides the command).
-ENTRYPOINT ["sh", "/app/start.sh"]
+# Railway-compatible: Use PORT environment variable (Railway sets this automatically)
+CMD ["sh", "-c", "uvicorn saleor.asgi:application --host=0.0.0.0 --port=${PORT:-8000} --workers=2 --lifespan=off --ws=none --no-server-header --no-access-log --timeout-keep-alive=35 --timeout-graceful-shutdown=30 --limit-max-requests=10000"]
