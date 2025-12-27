@@ -1,0 +1,1 @@
+web: uvicorn saleor.asgi:application --host=0.0.0.0 --port=$PORT --workers=2 --lifespan=off --ws=none --no-server-header --no-access-log --timeout-keep-alive=35 --timeout-graceful-shutdown=30 --limit-max-requests=10000
