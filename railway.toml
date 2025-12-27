@@ -1,0 +1,12 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Explicit start command to override any stale dashboard/service startCommand.
+# This ensures env var decoding (RSA_PRIVATE_KEY_B64) + migrations run before uvicorn.
+startCommand = "sh /app/start.sh"
+healthcheckPath = "/health/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
