@@ -16,12 +16,22 @@ echo "========================================="
 # Security: Default to DEBUG=False (production mode) when DEBUG is not set.
 # Only enable DEBUG when explicitly set to 'true' or '1'.
 DEBUG_BOOL=$(python3 -c "import os; v=os.environ.get('DEBUG'); print('1' if v is not None and (str(v).lower()=='true' or str(v)=='1') else '0')")
-ALLOWED_CLIENT_HOSTS_VAL="$(printf "%s" "${ALLOWED_CLIENT_HOSTS-}" | tr -d '\r' | xargs 2>/dev/null || true)"
-echo "[start.sh] preflight DEBUG_BOOL=${DEBUG_BOOL} ALLOWED_CLIENT_HOSTS_set=$([ -n \"$ALLOWED_CLIENT_HOSTS_VAL\" ] && echo yes || echo no)"
+# Check if ALLOWED_CLIENT_HOSTS is set and non-empty (after trimming whitespace)
+ALLOWED_CLIENT_HOSTS_RAW="${ALLOWED_CLIENT_HOSTS-}"
+ALLOWED_CLIENT_HOSTS_VAL="$(printf "%s" "$ALLOWED_CLIENT_HOSTS_RAW" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+ALLOWED_CLIENT_HOSTS_IS_SET="$([ -n "${ALLOWED_CLIENT_HOSTS_RAW}" ] && echo yes || echo no)"
+ALLOWED_CLIENT_HOSTS_IS_NONEMPTY="$([ -n "$ALLOWED_CLIENT_HOSTS_VAL" ] && echo yes || echo no)"
+echo "[start.sh] preflight DEBUG_BOOL=${DEBUG_BOOL} ALLOWED_CLIENT_HOSTS_env_set=${ALLOWED_CLIENT_HOSTS_IS_SET} ALLOWED_CLIENT_HOSTS_nonempty=${ALLOWED_CLIENT_HOSTS_IS_NONEMPTY}"
 if [ "$DEBUG_BOOL" = "0" ] && [ -z "$ALLOWED_CLIENT_HOSTS_VAL" ]; then
     echo "ERROR: ALLOWED_CLIENT_HOSTS is required when DEBUG=False."
+    echo ""
+    echo "The variable is ${ALLOWED_CLIENT_HOSTS_IS_SET} but ${ALLOWED_CLIENT_HOSTS_IS_NONEMPTY} (empty or whitespace-only)."
+    echo ""
     echo "Set Railway variable ALLOWED_CLIENT_HOSTS to a comma-separated list of hostnames (no https://)."
     echo "Example: ALLOWED_CLIENT_HOSTS=your-service.up.railway.app,localhost,127.0.0.1"
+    echo ""
+    echo "To set it via Railway CLI:"
+    echo "  railway variables --set 'ALLOWED_CLIENT_HOSTS=*.railway.app,your-service.up.railway.app,localhost,127.0.0.1'"
     exit 1
 fi
 
@@ -96,6 +106,17 @@ python3 manage.py migrate --noinput || {
 
 echo ""
 echo "Migrations completed successfully!"
+
+# Create superuser if environment variables are set (one-time operation)
+if [ -n "${DJANGO_SUPERUSER_EMAIL:-}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD:-}" ]; then
+    echo ""
+    echo "Creating initial superuser (if not exists)..."
+    python3 manage.py create_initial_superuser || {
+        echo "WARNING: Failed to create superuser (may already exist)"
+    }
+fi
+
+echo ""
 echo "Starting application server on port $PORT_VAL..."
 
 # Start uvicorn - use PORT_VAL (guaranteed to be a number from Python)
