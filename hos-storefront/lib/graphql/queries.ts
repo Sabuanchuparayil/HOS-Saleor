@@ -254,7 +254,7 @@ export const GET_SELLER = gql`
 // Homepage Queries
 export const GET_FEATURED_PRODUCTS = gql`
   query GetFeaturedProducts($channel: String, $first: Int) {
-    products(channel: $channel, first: $first, sortBy: { field: CREATED_AT, direction: DESC }) {
+    featuredProducts(channel: $channel, first: $first) {
       edges {
         node {
           id
@@ -288,7 +288,7 @@ export const GET_FEATURED_PRODUCTS = gql`
 
 export const GET_FEATURED_COLLECTIONS = gql`
   query GetFeaturedCollections($channel: String, $first: Int) {
-    collections(first: $first, channel: $channel) {
+    featuredCollections(channel: $channel, first: $first) {
       edges {
         node {
           id

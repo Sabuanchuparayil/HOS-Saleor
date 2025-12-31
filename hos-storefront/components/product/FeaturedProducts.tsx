@@ -39,7 +39,7 @@ export function FeaturedProducts() {
     );
   }
 
-  const products = (data as any)?.featuredProducts?.edges?.map((edge: any) => edge.node) || [];
+  const products = (data as any)?.products?.edges?.map((edge: any) => edge.node) || [];
 
   return (
     <section>
