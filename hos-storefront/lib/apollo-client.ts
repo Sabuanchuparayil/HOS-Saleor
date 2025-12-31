@@ -23,29 +23,43 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }: 
     console.group('Network Error:');
     console.error('Error:', networkError);
     console.error('Message:', (networkError as any).message);
+    console.error('Stack:', (networkError as any).stack);
     
     // Log response if available
     if ('response' in networkError && networkError.response) {
       const response = networkError.response as any;
       console.error('Response status:', response.status);
       console.error('Response statusText:', response.statusText);
-      console.error('Response headers:', response.headers);
       
-      // Try to read response body
-      if (response.text) {
-        response.text().then((text: string) => {
-          console.error('Response body:', text);
+      // Try to get response body - Apollo Client might have it in result
+      if (networkError.result) {
+        console.error('Response result:', networkError.result);
+      }
+      
+      // Try to read response body using clone
+      if (response.clone) {
+        response.clone().text().then((text: string) => {
+          console.error('Response body (text):', text);
           try {
             const json = JSON.parse(text);
-            console.error('Response JSON:', json);
+            console.error('Response JSON:', JSON.stringify(json, null, 2));
+            if (json.errors) {
+              console.error('GraphQL Errors:', json.errors);
+              json.errors.forEach((err: any) => {
+                console.error('  - Message:', err.message);
+                console.error('  - Locations:', err.locations);
+                console.error('  - Path:', err.path);
+                console.error('  - Extensions:', err.extensions);
+              });
+            }
           } catch (e) {
-            // Not JSON, that's fine
+            console.error('Could not parse as JSON:', e);
           }
         }).catch((err: any) => {
           console.error('Error reading response body:', err);
         });
       } else if (response.body) {
-        console.error('Response body (stream):', response.body);
+        console.error('Response body:', response.body);
       }
     }
     
