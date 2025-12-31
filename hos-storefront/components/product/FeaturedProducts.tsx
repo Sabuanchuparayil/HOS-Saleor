@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { ApolloError } from "@apollo/client";
 import { GET_FEATURED_PRODUCTS } from "@/lib/graphql/queries";
 import Link from "next/link";
 import Image from "next/image";
@@ -32,12 +31,11 @@ export function FeaturedProducts() {
   }
 
   if (error) {
-    const apolloError = error as ApolloError;
     console.error("FeaturedProducts GraphQL Error:", error);
     console.error("Error details:", {
       message: error.message,
-      graphQLErrors: apolloError.graphQLErrors,
-      networkError: apolloError.networkError,
+      graphQLErrors: (error as any).graphQLErrors,
+      networkError: (error as any).networkError,
     });
     return (
       <section>
