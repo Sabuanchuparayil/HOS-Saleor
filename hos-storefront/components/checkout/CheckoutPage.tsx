@@ -1,0 +1,205 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { GET_CHECKOUT } from "@/lib/graphql/queries";
+import { CREATE_CHECKOUT, COMPLETE_CHECKOUT, UPDATE_CHECKOUT_SHIPPING_ADDRESS } from "@/lib/graphql/mutations";
+import { ShippingAddress } from "./ShippingAddress";
+import { PaymentMethod } from "./PaymentMethod";
+import { OrderReview } from "./OrderReview";
+import { CheckoutSummary } from "./CheckoutSummary";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+type CheckoutStep = "shipping" | "payment" | "review";
+
+export function CheckoutPage() {
+  const router = useRouter();
+  const [checkoutId, setCheckoutId] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
+  const [shippingAddress, setShippingAddress] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedCheckoutId = localStorage.getItem("checkoutId");
+    if (storedCheckoutId) {
+      setCheckoutId(storedCheckoutId);
+    } else {
+      // Create new checkout if none exists
+      createNewCheckout();
+    }
+  }, []);
+
+  const [createCheckout] = useMutation(CREATE_CHECKOUT);
+  const [completeCheckout] = useMutation(COMPLETE_CHECKOUT);
+
+  const createNewCheckout = async () => {
+    try {
+      const { data } = await createCheckout();
+      const newCheckoutId = (data as any)?.checkoutCreate?.checkout?.id;
+      if (newCheckoutId) {
+        setCheckoutId(newCheckoutId);
+        localStorage.setItem("checkoutId", newCheckoutId);
+      }
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+    }
+  };
+
+  const { data, loading, error } = useQuery(GET_CHECKOUT, {
+    variables: { id: checkoutId },
+    skip: !checkoutId,
+  });
+
+  const checkout = (data as any)?.checkout;
+
+  const handleShippingSubmit = (address: any) => {
+    setShippingAddress(address);
+    setCurrentStep("payment");
+  };
+
+  const handlePaymentSubmit = (method: string) => {
+    setPaymentMethod(method);
+    setCurrentStep("review");
+  };
+
+  const handleCompleteOrder = async () => {
+    if (!checkoutId) return;
+
+    try {
+      const { data } = await completeCheckout({
+        variables: {
+          checkoutId,
+          paymentData: {
+            gateway: paymentMethod || "stripe",
+            token: "dummy-token", // In production, get from payment provider
+          },
+        },
+      });
+
+      const order = (data as any)?.checkoutComplete?.order;
+      if (order) {
+        // Clear checkout from localStorage
+        localStorage.removeItem("checkoutId");
+        // Redirect to order confirmation
+        router.push(`/order-confirmation/${order.id}`);
+      }
+    } catch (error) {
+      console.error("Error completing checkout:", error);
+      alert("There was an error processing your order. Please try again.");
+    }
+  };
+
+  if (loading || !checkoutId) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive mb-4">Error loading checkout</p>
+        <p className="text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (!checkout || !checkout.lines || checkout.lines.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
+        <p className="text-muted-foreground mb-6">
+          Add items to your cart before checkout
+        </p>
+        <a
+          href="/products"
+          className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+        >
+          Continue Shopping
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1 className="text-4xl font-bold mb-8">Checkout</h1>
+
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {["shipping", "payment", "review"].map((step, index) => {
+            const stepLabel = step.charAt(0).toUpperCase() + step.slice(1);
+            const isActive = currentStep === step;
+            const isCompleted =
+              (step === "shipping" && currentStep !== "shipping") ||
+              (step === "payment" && currentStep === "review");
+
+            return (
+              <div key={step} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                      isActive || isCompleted
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {isCompleted ? "✓" : index + 1}
+                  </div>
+                  <span
+                    className={`mt-2 text-sm ${
+                      isActive ? "font-semibold text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {stepLabel}
+                  </span>
+                </div>
+                {index < 2 && (
+                  <div
+                    className={`flex-1 h-1 mx-4 ${
+                      isCompleted ? "bg-primary" : "bg-secondary"
+                    }`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          {currentStep === "shipping" && (
+            <ShippingAddress
+              checkout={checkout}
+              onSubmit={handleShippingSubmit}
+            />
+          )}
+          {currentStep === "payment" && (
+            <PaymentMethod
+              checkout={checkout}
+              onSubmit={handlePaymentSubmit}
+            />
+          )}
+          {currentStep === "review" && (
+            <OrderReview
+              checkout={checkout}
+              shippingAddress={shippingAddress}
+              paymentMethod={paymentMethod}
+              onComplete={handleCompleteOrder}
+            />
+          )}
+        </div>
+
+        <div className="lg:col-span-1">
+          <CheckoutSummary checkout={checkout} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
