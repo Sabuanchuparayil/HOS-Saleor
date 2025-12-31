@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci && npm run build"
+buildCommand = "npm run build"
 # Specify Node.js version for Next.js 16
 nixpacksConfig = """
 {
