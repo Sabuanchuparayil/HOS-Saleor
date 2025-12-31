@@ -3,6 +3,10 @@ import { setContext } from "@apollo/client/link/context";
 
 const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_SALEOR_API_URL || "https://hos-saleor-production.up.railway.app/graphql/",
+  credentials: "same-origin",
+  fetchOptions: {
+    mode: "cors",
+  },
 });
 
 const authLink = setContext((_, { headers }) => {
