@@ -9,6 +9,7 @@ import { SellerCard } from "./SellerCard";
 export function FeaturedSellers() {
   const { data, loading, error } = useQuery(GET_SELLERS, {
     variables: { first: 6 },
+    errorPolicy: "all", // Continue even if there are errors
   });
 
   if (loading) {

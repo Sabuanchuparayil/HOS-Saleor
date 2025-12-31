@@ -9,15 +9,20 @@ export function AccountDashboard() {
   const { data } = useQuery(GET_USER_ORDERS, {
     variables: { first: 5 },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all", // Continue even if there are errors
   });
 
   const { data: loyaltyData } = useQuery(GET_LOYALTY_BALANCE, {
     fetchPolicy: "cache-and-network",
+    errorPolicy: "ignore", // Ignore errors if loyalty system not available
+    skip: false, // Try to fetch, but don't fail if it doesn't exist
   });
 
   const { data: badgesData } = useQuery(GET_USER_BADGES, {
     variables: { first: 5 },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "ignore", // Ignore errors if badges system not available
+    skip: false, // Try to fetch, but don't fail if it doesn't exist
   });
 
   const recentOrders = (data as any)?.me?.orders?.edges?.map((edge: any) => edge.node) || [];

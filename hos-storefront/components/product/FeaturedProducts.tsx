@@ -10,6 +10,7 @@ import { ProductCard } from "./ProductCard";
 export function FeaturedProducts() {
   const { data, loading, error } = useQuery(GET_FEATURED_PRODUCTS, {
     variables: { first: 8 },
+    errorPolicy: "all", // Continue even if there are errors
   });
 
   if (loading) {

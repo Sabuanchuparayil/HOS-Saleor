@@ -40,9 +40,11 @@ export const apolloClient = new ApolloClient({
   defaultOptions: {
     watchQuery: {
       errorPolicy: "all",
+      fetchPolicy: "cache-and-network",
     },
     query: {
       errorPolicy: "all",
+      fetchPolicy: "cache-and-network",
     },
   },
 });

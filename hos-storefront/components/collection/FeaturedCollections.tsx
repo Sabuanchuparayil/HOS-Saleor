@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 export function FeaturedCollections() {
   const { data, loading, error } = useQuery(GET_FEATURED_COLLECTIONS, {
     variables: { first: 6 },
+    errorPolicy: "all", // Continue even if there are errors
   });
 
   if (loading) {
@@ -31,7 +32,7 @@ export function FeaturedCollections() {
     return null; // Silently fail for homepage
   }
 
-  const collections = (data as any)?.featuredCollections?.edges?.map((edge: any) => edge.node) || [];
+  const collections = (data as any)?.collections?.edges?.map((edge: any) => edge.node) || [];
 
   if (collections.length === 0) {
     return null; // Don't show section if no collections
