@@ -31,15 +31,24 @@ export function FeaturedProducts() {
   }
 
   if (error) {
+    console.error("FeaturedProducts GraphQL Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      graphQLErrors: error.graphQLErrors,
+      networkError: error.networkError,
+    });
     return (
       <section>
         <h2 className="text-3xl font-bold mb-8">Featured Products</h2>
         <p className="text-muted-foreground">Error loading products. Please try again later.</p>
+        {process.env.NODE_ENV === "development" && (
+          <p className="text-xs text-red-500 mt-2">{error.message}</p>
+        )}
       </section>
     );
   }
 
-  const products = (data as any)?.products?.edges?.map((edge: any) => edge.node) || [];
+  const products = (data as any)?.featuredProducts?.edges?.map((edge: any) => edge.node) || [];
 
   return (
     <section>

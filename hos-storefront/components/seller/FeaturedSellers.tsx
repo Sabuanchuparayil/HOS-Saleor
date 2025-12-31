@@ -30,10 +30,19 @@ export function FeaturedSellers() {
   }
 
   if (error) {
+    console.error("FeaturedSellers GraphQL Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      graphQLErrors: error.graphQLErrors,
+      networkError: error.networkError,
+    });
     return (
       <section>
         <h2 className="text-3xl font-bold mb-8">Featured Sellers</h2>
         <p className="text-muted-foreground">Error loading sellers. Please try again later.</p>
+        {process.env.NODE_ENV === "development" && (
+          <p className="text-xs text-red-500 mt-2">{error.message}</p>
+        )}
       </section>
     );
   }

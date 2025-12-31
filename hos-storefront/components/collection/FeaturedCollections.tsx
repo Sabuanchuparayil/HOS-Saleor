@@ -29,6 +29,12 @@ export function FeaturedCollections() {
   }
 
   if (error) {
+    console.error("FeaturedCollections GraphQL Error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      graphQLErrors: error.graphQLErrors,
+      networkError: error.networkError,
+    });
     return null; // Silently fail for homepage
   }
 
