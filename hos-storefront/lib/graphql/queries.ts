@@ -282,6 +282,12 @@ export const GET_FEATURED_PRODUCTS = gql`
           }
         }
       }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
     }
   }
 `;
@@ -300,6 +306,12 @@ export const GET_FEATURED_COLLECTIONS = gql`
             alt
           }
         }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
       }
     }
   }
