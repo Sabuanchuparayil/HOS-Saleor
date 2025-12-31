@@ -5,7 +5,7 @@ import { onError } from "@apollo/client/link/error";
 // Error link for better error logging
 const errorLink = onError(({ graphQLErrors, networkError, operation, forward }: any) => {
   if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, locations, path, extensions }) => {
+    graphQLErrors.forEach(({ message, locations, path, extensions }: any) => {
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${JSON.stringify(path)}`,
         extensions
