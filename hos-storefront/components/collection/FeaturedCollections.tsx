@@ -32,7 +32,7 @@ export function FeaturedCollections() {
     return null; // Silently fail for homepage
   }
 
-  const collections = (data as any)?.collections?.edges?.map((edge: any) => edge.node) || [];
+  const collections = (data as any)?.featuredCollections?.edges?.map((edge: any) => edge.node) || [];
 
   if (collections.length === 0) {
     return null; // Don't show section if no collections
