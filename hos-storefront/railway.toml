@@ -1,6 +1,16 @@
 [build]
 builder = "NIXPACKS"
 buildCommand = "npm run build"
+# Specify Node.js version for Next.js 16
+nixpacksConfig = """
+{
+  "phases": {
+    "setup": {
+      "nixPkgs": ["nodejs_20"]
+    }
+  }
+}
+"""
 
 [deploy]
 startCommand = "npm start"
