@@ -500,6 +500,50 @@ def handle_fully_paid_order(
     if not order.is_draft() and order.channel.automatically_confirm_all_new_orders:
         update_order_status(order)
 
+    # Create settlements for marketplace sellers
+    try:
+        from ..marketplace.utils import create_settlements_for_order
+    except ImportError:
+        # Marketplace app not installed, skip settlement creation
+        pass
+    else:
+        # Only call the function if import succeeded
+        try:
+            create_settlements_for_order(order)
+        except Exception as e:
+            logger.error(
+                f"Error creating settlements for order {order.id}: {e}",
+                exc_info=True,
+            )
+
+    # Award loyalty points for completed order
+    if order.user:
+        try:
+            from ..marketplace.utils_loyalty import (
+                award_points_for_order,
+                check_and_award_badges,
+            )
+            from django.conf import settings
+        except ImportError:
+            # Loyalty system not installed, skip
+            pass
+        else:
+            # Only call the functions if import succeeded
+            try:
+                # Award points (default: 1 point per dollar)
+                points_per_dollar = getattr(
+                    settings, "LOYALTY_POINTS_PER_DOLLAR", Decimal("1.0")
+                )
+                award_points_for_order(order.user, order, points_per_dollar)
+
+                # Check for badge eligibility
+                check_and_award_badges(order.user, order)
+            except Exception as e:
+                logger.error(
+                    f"Error awarding loyalty points for order {order.id}: {e}",
+                    exc_info=True,
+                )
+
     call_order_events(
         manager,
         [
