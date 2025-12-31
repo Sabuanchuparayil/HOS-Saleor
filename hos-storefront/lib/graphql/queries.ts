@@ -675,7 +675,7 @@ export const GET_USER_RETURNS = gql`
             status
             reason
             notes
-            created
+            requestedAt
             order {
               id
               number
