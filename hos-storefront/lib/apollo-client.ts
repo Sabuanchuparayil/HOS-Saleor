@@ -4,28 +4,61 @@ import { onError } from "@apollo/client/link/error";
 
 // Error link for better error logging
 const errorLink = onError(({ graphQLErrors, networkError, operation, forward }: any) => {
+  console.group('🔴 Apollo Client Error');
+  console.log('Operation:', operation?.operationName || 'Unknown');
+  console.log('Variables:', operation?.variables || {});
+  
   if (graphQLErrors) {
+    console.group('GraphQL Errors:');
     graphQLErrors.forEach(({ message, locations, path, extensions }: any) => {
-      console.error(
-        `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${JSON.stringify(path)}`,
-        extensions
-      );
+      console.error('Message:', message);
+      console.error('Locations:', locations);
+      console.error('Path:', path);
+      console.error('Extensions:', extensions);
     });
+    console.groupEnd();
   }
+  
   if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
+    console.group('Network Error:');
+    console.error('Error:', networkError);
+    console.error('Message:', (networkError as any).message);
+    
     // Log response if available
     if ('response' in networkError && networkError.response) {
-      console.error('Response status:', networkError.response.status);
-      console.error('Response headers:', networkError.response.headers);
+      const response = networkError.response as any;
+      console.error('Response status:', response.status);
+      console.error('Response statusText:', response.statusText);
+      console.error('Response headers:', response.headers);
+      
       // Try to read response body
-      if ('text' in networkError.response) {
-        networkError.response.text().then((text: string) => {
+      if (response.text) {
+        response.text().then((text: string) => {
           console.error('Response body:', text);
-        }).catch(() => {});
+          try {
+            const json = JSON.parse(text);
+            console.error('Response JSON:', json);
+          } catch (e) {
+            // Not JSON, that's fine
+          }
+        }).catch((err: any) => {
+          console.error('Error reading response body:', err);
+        });
+      } else if (response.body) {
+        console.error('Response body (stream):', response.body);
       }
     }
+    
+    // Log request details
+    if ('request' in networkError && networkError.request) {
+      console.error('Request URL:', (networkError.request as any).url);
+      console.error('Request method:', (networkError.request as any).method);
+    }
+    
+    console.groupEnd();
   }
+  
+  console.groupEnd();
 });
 
 const httpLink = createHttpLink({
