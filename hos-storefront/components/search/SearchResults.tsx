@@ -14,6 +14,7 @@ interface SearchResultsProps {
 
 export function SearchResults({ query }: SearchResultsProps) {
   const [activeTab, setActiveTab] = useState<"all" | "products" | "sellers">("all");
+  const [sellerFilter, setSellerFilter] = useState<string | null>(null);
 
   const { data: productsData, loading: productsLoading } = useQuery(SEARCH_PRODUCTS, {
     variables: { query, first: 24 },

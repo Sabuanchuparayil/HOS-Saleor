@@ -34,7 +34,21 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       ssrMode: true,
     });
 
-    const { data } = await client.query({
+    const { data } = await client.query<{
+      products?: {
+        edges?: Array<{
+          node?: {
+            id: string;
+            name: string;
+            slug: string;
+            description?: string;
+            seoTitle?: string;
+            seoDescription?: string;
+            thumbnail?: { url: string; alt?: string };
+          };
+        }>;
+      };
+    }>({
       query: GET_PRODUCT_BY_SLUG,
       variables: { slug },
       context: { fetchOptions: { next: { revalidate: 60 } } },
@@ -56,7 +70,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         title: product.name,
         description: product.description || product.seoDescription,
         images: product.thumbnail ? [{ url: product.thumbnail.url }] : [],
-        type: "product",
+        type: "website",
       },
       twitter: {
         card: "summary_large_image",
