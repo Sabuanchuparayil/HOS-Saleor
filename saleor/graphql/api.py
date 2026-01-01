@@ -311,6 +311,7 @@ GraphQLWebhookEventsInfoDirective = graphql.GraphQLDirective(
 # #region agent log
 try:
     import graphene
+    from .core.fields import BaseField, ConnectionField
     # Get all attributes from Query class
     query_attrs = dir(Query)
     # Check for graphene Field instances

@@ -8,7 +8,7 @@ from ..core.connection import CountableConnection
 from ..core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ..core.fields import BaseField, ConnectionField, JSONString
 from ..core.scalars import DateTime, Decimal
-from ..core.types import Image, ModelObjectType, Money
+from ..core.types import CountryDisplay, Image, ModelObjectType, Money
 from .enums import (
     DistributorCategoryEnum,
     FulfillmentMethodEnum,
@@ -410,7 +410,7 @@ class FulfillmentCenter(ModelObjectType[models.FulfillmentCenter]):
     id = graphene.GlobalID(required=True)
     name = graphene.String(required=True)
     location = graphene.String(required=True)
-    country = graphene.Field("saleor.graphql.warehouse.types.CountryDisplay")
+    country = graphene.Field(CountryDisplay)
     address = graphene.Field("saleor.graphql.account.types.Address")
     is_active = graphene.Boolean(required=True)
     priority = graphene.Int(required=True)
@@ -452,7 +452,7 @@ class SellerShippingMethod(ModelObjectType[models.SellerShippingMethod]):
     estimated_days = graphene.Int()
     is_active = graphene.Boolean(required=True)
     fulfillment_center = graphene.Field(FulfillmentCenter)
-    destination_country = graphene.Field("saleor.graphql.warehouse.types.CountryDisplay")
+    destination_country = graphene.Field(CountryDisplay)
     destination_city = graphene.String()
     tiered_pricing = JSONString()
 
@@ -584,7 +584,7 @@ class PricingRule(ModelObjectType[models.PricingRule]):
     fixed_price = graphene.Field(Money)
     valid_from = DateTime()
     valid_until = DateTime()
-    country = graphene.Field("saleor.graphql.warehouse.types.CountryDisplay")
+    country = graphene.Field(CountryDisplay)
     is_active = graphene.Boolean(required=True)
 
 
@@ -601,7 +601,7 @@ class PaymentGatewayConfig(ModelObjectType[models.PaymentGatewayConfig]):
     seller = graphene.Field(Seller)
     gateway_name = graphene.String(required=True)
     gateway_config = JSONString()
-    enabled_countries = graphene.List("saleor.graphql.warehouse.types.CountryDisplay")
+    enabled_countries = graphene.List(CountryDisplay)
     enabled_currencies = graphene.List(graphene.String)
     compliance_requirements = JSONString()
     is_active = graphene.Boolean(required=True)
