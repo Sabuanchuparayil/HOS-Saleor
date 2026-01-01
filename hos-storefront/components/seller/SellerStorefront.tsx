@@ -7,6 +7,8 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Badge } from "@/components/common/Badge";
 import { formatPrice } from "@/lib/utils";
 import { Loader2, Store, Package, TrendingUp } from "lucide-react";
+import { useEffect } from "react";
+import { generateSellerJSONLD } from "@/lib/seo/jsonld";
 
 interface SellerStorefrontProps {
   slug: string;
@@ -18,6 +20,20 @@ export function SellerStorefront({ slug }: SellerStorefrontProps) {
   });
 
   const seller = (sellerData as any)?.seller;
+
+  // Generate JSON-LD structured data for seller/store page
+  useEffect(() => {
+    if (!seller) return;
+    const jsonLd = generateSellerJSONLD(seller as any);
+    if (!jsonLd) return;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [seller]);
 
   const { data: productsData, loading: productsLoading } = useQuery(GET_PRODUCTS, {
     variables: {

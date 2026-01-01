@@ -205,11 +205,6 @@ export function ProductDetail({ slug }: ProductDetailProps) {
           <InventoryDisplay product={product} selectedVariant={selectedVariant} />
         </div>
 
-        {/* Real-Time Inventory Display */}
-        <div className="mb-6">
-          <InventoryDisplay product={product} selectedVariant={selectedVariant} />
-        </div>
-
         {/* Quantity Selection */}
         <div className="mb-6">
           <label className="text-sm font-medium mb-2 block">Quantity</label>

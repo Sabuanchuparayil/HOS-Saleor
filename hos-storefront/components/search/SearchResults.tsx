@@ -29,6 +29,9 @@ export function SearchResults({ query }: SearchResultsProps) {
   const products = (productsData as any)?.products?.edges?.map((edge: any) => edge.node) || [];
   const sellers = (sellersData as any)?.sellers?.edges?.map((edge: any) => edge.node) || [];
   const loading = productsLoading || sellersLoading;
+  const filteredProducts = sellerFilter
+    ? products.filter((p: any) => p?.seller?.id === sellerFilter)
+    : products;
 
   if (!query || query.length < 2) {
     return (
@@ -84,7 +87,7 @@ export function SearchResults({ query }: SearchResultsProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            All ({products.length + sellers.length})
+            All ({filteredProducts.length + sellers.length})
           </button>
           <button
             onClick={() => setActiveTab("products")}
@@ -94,7 +97,7 @@ export function SearchResults({ query }: SearchResultsProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Products ({products.length})
+            Products ({filteredProducts.length})
           </button>
           <button
             onClick={() => setActiveTab("sellers")}
@@ -118,9 +121,9 @@ export function SearchResults({ query }: SearchResultsProps) {
           {(activeTab === "all" || activeTab === "products") && (
             <div className={activeTab === "all" ? "mb-12" : ""}>
               <h2 className="text-2xl font-bold mb-6">Products</h2>
-              {products.length > 0 ? (
+              {filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {products.map((product: any) => (
+                  {filteredProducts.map((product: any) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
@@ -145,7 +148,7 @@ export function SearchResults({ query }: SearchResultsProps) {
             </div>
           )}
 
-          {products.length === 0 && sellers.length === 0 && (
+          {filteredProducts.length === 0 && sellers.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">
                 No results found for "{query}"

@@ -21,6 +21,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://hos-storefront-production.up.railway.app";
   
   try {
     // Create a server-side Apollo client for metadata generation
@@ -60,12 +62,18 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       return {
         title: "Product Not Found | House of Spells",
         description: "The requested product could not be found",
+        alternates: {
+          canonical: `${siteUrl}/products/${slug}`,
+        },
       };
     }
 
     return {
       title: product.seoTitle || `${product.name} | House of Spells`,
       description: product.seoDescription || product.description || "Product details and information",
+      alternates: {
+        canonical: `${siteUrl}/products/${slug}`,
+      },
       openGraph: {
         title: product.name,
         description: product.description || product.seoDescription,
@@ -83,26 +91,24 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     return {
       title: "Product | House of Spells",
       description: "Product details and information",
+      alternates: {
+        canonical: `${siteUrl}/products/${slug}`,
+      },
     };
   }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hos-marketplaceweb-production.up.railway.app";
-  const canonicalUrl = `${siteUrl}/products/${slug}`;
 
   return (
-    <>
-      <link rel="canonical" href={canonicalUrl} />
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1 container py-8">
-          <ProductDetail slug={slug} />
-        </main>
-        <Footer />
-      </div>
-    </>
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 container py-8">
+        <ProductDetail slug={slug} />
+      </main>
+      <Footer />
+    </div>
   );
 }
 
