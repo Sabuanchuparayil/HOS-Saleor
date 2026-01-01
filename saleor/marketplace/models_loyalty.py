@@ -61,6 +61,7 @@ class LoyaltyPointsTransaction(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at",)
         indexes = [
             BTreeIndex(fields=["user"], name="loyalty_tx_user_idx"),
@@ -102,6 +103,7 @@ class LoyaltyPointsBalance(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         indexes = [
             BTreeIndex(fields=["user"], name="loyalty_balance_user_idx"),
             BTreeIndex(fields=["balance"], name="loyalty_balance_balance_idx"),
@@ -193,6 +195,7 @@ class Badge(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("name",)
         indexes = [
             BTreeIndex(fields=["slug"], name="badge_slug_idx"),
@@ -234,6 +237,7 @@ class UserBadge(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-earned_at",)
         unique_together = [("user", "badge")]
         indexes = [
@@ -312,6 +316,7 @@ class Reward(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("points_required", "name")
         indexes = [
             BTreeIndex(fields=["slug"], name="reward_slug_idx"),
@@ -381,6 +386,7 @@ class RewardRedemption(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at",)
         indexes = [
             BTreeIndex(fields=["user"], name="reward_redemption_user_idx"),
