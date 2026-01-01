@@ -24,7 +24,7 @@ class PricingRuleCreate(BaseMutation):
         valid_from = graphene.DateTime(description="Start date for seasonal/promotional pricing.")
         valid_until = graphene.DateTime(description="End date for seasonal/promotional pricing.")
         country = graphene.String(description="Country code (optional, for country-specific pricing).")
-        is_active = graphene.Boolean(default=True, description="Whether this pricing rule is active.")
+        is_active = graphene.Boolean(default_value=True, description="Whether this pricing rule is active.")
 
     pricing_rule = graphene.Field(PricingRule, description="The created pricing rule.")
 
