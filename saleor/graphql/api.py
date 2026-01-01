@@ -351,10 +351,37 @@ try:
     has_sellers = "sellers" in field_names
     has_featured_products = "featuredProducts" in field_names
     has_featured_collections = "featuredCollections" in field_names
-    debug_log("api.py:285", "Schema built", {"totalFields": len(field_names), "hasSellers": has_sellers, "hasFeaturedProducts": has_featured_products, "hasFeaturedCollections": has_featured_collections, "marketplaceFields": [f for f in field_names if "seller" in f.lower() or "featured" in f.lower()]}, hypothesis_id="C")
+    
+    # Check if ANY marketplace-related fields exist
+    marketplace_related = [f for f in field_names if any(term in f.lower() for term in ["seller", "featured", "theme", "newsletter", "fulfillment", "return", "loyalty", "badge", "reward"])]
+    
+    # Also check Query._meta.fields again after schema build
+    query_meta_fields = []
+    if hasattr(Query, "_meta") and hasattr(Query._meta, "fields") and Query._meta.fields:
+        query_meta_fields = list(Query._meta.fields.keys())
+    
+    debug_log("api.py:335", "Schema built and verified", {
+        "totalFields": len(field_names),
+        "hasSellers": has_sellers,
+        "hasFeaturedProducts": has_featured_products,
+        "hasFeaturedCollections": has_featured_collections,
+        "marketplaceFieldsInSchema": marketplace_related,
+        "queryMetaFieldsCount": len(query_meta_fields),
+        "queryMetaFieldsSample": query_meta_fields[:30],
+        "allFieldNames": field_names  # Include all field names for debugging
+    }, hypothesis_id="C")
+    
+    # If marketplace fields are missing, log a warning
+    if not (has_sellers or has_featured_products or has_featured_collections):
+        debug_log("api.py:335", "WARNING: Marketplace fields missing from schema!", {
+            "expectedFields": ["sellers", "featuredProducts", "featuredCollections"],
+            "actualFields": field_names,
+            "queryBases": [base.__name__ for base in Query.__bases__] if hasattr(Query, "__bases__") else []
+        }, hypothesis_id="G")
 except Exception as e:
     try:
-        debug_log("api.py:285", "Error checking schema", {"error": str(e)}, hypothesis_id="C")
+        import traceback
+        debug_log("api.py:335", "Error checking schema", {"error": str(e), "traceback": traceback.format_exc()}, hypothesis_id="C")
     except Exception:
         pass
 # #endregion
