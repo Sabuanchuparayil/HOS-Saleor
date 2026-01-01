@@ -28,27 +28,27 @@ export function CartSummary({ checkout }: CartSummaryProps) {
       <div className="space-y-3 mb-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatPrice(subtotal.amount / 100, subtotal.currency)}</span>
+          <span>{formatPrice(subtotal.amount, subtotal.currency)}</span>
         </div>
         
         {shipping.amount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Shipping</span>
-            <span>{formatPrice(shipping.amount / 100, shipping.currency)}</span>
+            <span>{formatPrice(shipping.amount, shipping.currency)}</span>
           </div>
         )}
         
         {tax.amount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Tax</span>
-            <span>{formatPrice(tax.amount / 100, tax.currency)}</span>
+            <span>{formatPrice(tax.amount, tax.currency)}</span>
           </div>
         )}
         
         {discount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
             <span>Discount</span>
-            <span>-{formatPrice(discount / 100, subtotal.currency)}</span>
+            <span>-{formatPrice(discount, subtotal.currency)}</span>
           </div>
         )}
       </div>
@@ -56,7 +56,7 @@ export function CartSummary({ checkout }: CartSummaryProps) {
       <div className="border-t pt-4 mb-6">
         <div className="flex justify-between font-bold text-lg">
           <span>Total</span>
-          <span>{formatPrice(total.amount / 100, total.currency)}</span>
+          <span>{formatPrice(total.amount, total.currency)}</span>
         </div>
       </div>
       
@@ -76,4 +76,5 @@ export function CartSummary({ checkout }: CartSummaryProps) {
     </div>
   );
 }
+
 

@@ -370,6 +370,10 @@ export const GET_CHECKOUT = gql`
     checkout(id: $id) {
       id
       token
+      isShippingRequired
+      channel {
+        slug
+      }
       lines {
         id
         quantity
@@ -382,6 +386,7 @@ export const GET_CHECKOUT = gql`
         variant {
           id
           name
+          sku
           product {
             id
             name
@@ -415,6 +420,26 @@ export const GET_CHECKOUT = gql`
         gross {
           amount
           currency
+        }
+      }
+      shippingMethods {
+        id
+        name
+        minimumDeliveryDays
+        maximumDeliveryDays
+        price {
+          amount
+          currency
+        }
+      }
+      delivery {
+        shippingMethod {
+          id
+          name
+          price {
+            amount
+            currency
+          }
         }
       }
       totalPrice {

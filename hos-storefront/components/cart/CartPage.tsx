@@ -161,7 +161,7 @@ export function CartPage() {
                     {new Intl.NumberFormat("en-US", {
                       style: "currency",
                       currency: group.subtotal.currency,
-                    }).format(group.subtotal.amount / 100)}
+                    }).format(group.subtotal.amount)}
                   </span>
                 </p>
               </div>

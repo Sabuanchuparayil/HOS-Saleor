@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CHECKOUT } from "@/lib/graphql/queries";
-import { CREATE_CHECKOUT, COMPLETE_CHECKOUT, UPDATE_CHECKOUT_SHIPPING_ADDRESS } from "@/lib/graphql/mutations";
+import { CREATE_CHECKOUT, COMPLETE_CHECKOUT } from "@/lib/graphql/mutations";
 import { ShippingAddress } from "./ShippingAddress";
 import { PaymentMethod } from "./PaymentMethod";
 import { OrderReview } from "./OrderReview";
@@ -35,7 +35,13 @@ export function CheckoutPage() {
 
   const createNewCheckout = async () => {
     try {
-      const { data } = await createCheckout();
+      const { data } = await createCheckout({
+        variables: {
+          email: null,
+          channel: process.env.NEXT_PUBLIC_SALEOR_CHANNEL || null,
+          lines: [],
+        },
+      });
       const newCheckoutId = (data as any)?.checkoutCreate?.checkout?.id;
       if (newCheckoutId) {
         setCheckoutId(newCheckoutId);
@@ -46,7 +52,7 @@ export function CheckoutPage() {
     }
   };
 
-  const { data, loading, error } = useQuery(GET_CHECKOUT, {
+  const { data, loading, error, refetch } = useQuery(GET_CHECKOUT, {
     variables: { id: checkoutId },
     skip: !checkoutId,
   });
@@ -177,6 +183,7 @@ export function CheckoutPage() {
             <ShippingAddress
               checkout={checkout}
               onSubmit={handleShippingSubmit}
+              refetchCheckout={refetch}
             />
           )}
           {currentStep === "payment" && (

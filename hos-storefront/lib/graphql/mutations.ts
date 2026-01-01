@@ -123,6 +123,39 @@ export const UPDATE_CHECKOUT_SHIPPING_ADDRESS = gql`
   }
 `;
 
+export const UPDATE_CHECKOUT_DELIVERY_METHOD = gql`
+  mutation UpdateCheckoutDeliveryMethod($checkoutId: ID!, $deliveryMethodId: ID!) {
+    checkoutDeliveryMethodUpdate(id: $checkoutId, deliveryMethodId: $deliveryMethodId) {
+      checkout {
+        id
+        delivery {
+          shippingMethod {
+            id
+            name
+          }
+        }
+        shippingPrice {
+          gross {
+            amount
+            currency
+          }
+        }
+        totalPrice {
+          gross {
+            amount
+            currency
+          }
+        }
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const COMPLETE_CHECKOUT = gql`
   mutation CompleteCheckout($checkoutId: ID!, $paymentData: PaymentInput!) {
     checkoutComplete(checkoutId: $checkoutId, paymentData: $paymentData) {

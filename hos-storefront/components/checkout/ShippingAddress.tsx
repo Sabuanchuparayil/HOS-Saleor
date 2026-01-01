@@ -5,7 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@apollo/client/react";
-import { UPDATE_CHECKOUT_SHIPPING_ADDRESS } from "@/lib/graphql/mutations";
+import {
+  UPDATE_CHECKOUT_DELIVERY_METHOD,
+  UPDATE_CHECKOUT_SHIPPING_ADDRESS,
+} from "@/lib/graphql/mutations";
+import { formatPrice } from "@/lib/utils";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -24,11 +28,19 @@ type AddressFormData = z.infer<typeof addressSchema>;
 interface ShippingAddressProps {
   checkout: any;
   onSubmit: (address: AddressFormData) => void;
+  refetchCheckout?: () => Promise<any>;
 }
 
-export function ShippingAddress({ checkout, onSubmit }: ShippingAddressProps) {
+export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: ShippingAddressProps) {
   const [updateAddress] = useMutation(UPDATE_CHECKOUT_SHIPPING_ADDRESS);
+  const [updateDeliveryMethod, { loading: deliveryUpdating }] = useMutation(
+    UPDATE_CHECKOUT_DELIVERY_METHOD
+  );
   const [isGuest, setIsGuest] = useState(true);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const [selectedShippingMethodId, setSelectedShippingMethodId] = useState<string | null>(
+    checkout?.delivery?.shippingMethod?.id || null
+  );
 
   const {
     register,
@@ -61,11 +73,51 @@ export function ShippingAddress({ checkout, onSubmit }: ShippingAddressProps) {
           },
         });
       }
-      onSubmit(data);
+      // Refresh checkout so shipping methods are recalculated for the destination
+      if (refetchCheckout) {
+        await refetchCheckout();
+      }
+      setAddressSaved(true);
+
+      // If shipping isn't required, allow moving on immediately
+      if (checkout?.isShippingRequired === false) {
+        onSubmit(data);
+      }
     } catch (error) {
       console.error("Error updating shipping address:", error);
       alert("There was an error updating your shipping address. Please try again.");
     }
+  };
+
+  const shippingMethods: any[] = checkout?.shippingMethods || [];
+  const shippingSelectedName = checkout?.delivery?.shippingMethod?.name;
+
+  const handleContinue = async (data: AddressFormData) => {
+    // Require method selection when shipping is required
+    if (checkout?.isShippingRequired !== false) {
+      if (!selectedShippingMethodId) {
+        alert("Please select a shipping method.");
+        return;
+      }
+
+      try {
+        await updateDeliveryMethod({
+          variables: {
+            checkoutId: checkout.id,
+            deliveryMethodId: selectedShippingMethodId,
+          },
+        });
+        if (refetchCheckout) {
+          await refetchCheckout();
+        }
+      } catch (error) {
+        console.error("Error updating delivery method:", error);
+        alert("There was an error selecting your shipping method. Please try again.");
+        return;
+      }
+    }
+
+    onSubmit(data);
   };
 
   return (
@@ -199,10 +251,86 @@ export function ShippingAddress({ checkout, onSubmit }: ShippingAddressProps) {
           disabled={isSubmitting}
           className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
-          {isSubmitting ? "Processing..." : "Continue to Payment"}
+          {isSubmitting ? "Saving address..." : "Save Address"}
         </button>
       </form>
+
+      {/* Shipping Method Selection */}
+      {checkout?.isShippingRequired !== false && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-3">Shipping Method</h3>
+
+          {!addressSaved && shippingMethods.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Save your address to see available shipping methods.
+            </p>
+          )}
+
+          {shippingMethods.length > 0 && (
+            <div className="space-y-3">
+              {shippingMethods.map((method: any) => {
+                const price = method.price || { amount: 0, currency: "USD" };
+                const days =
+                  method.minimumDeliveryDays || method.maximumDeliveryDays
+                    ? `${method.minimumDeliveryDays ?? ""}${
+                        method.minimumDeliveryDays && method.maximumDeliveryDays ? "-" : ""
+                      }${method.maximumDeliveryDays ?? ""} days`
+                    : null;
+
+                return (
+                  <label
+                    key={method.id}
+                    className="flex items-start gap-3 border rounded-md p-4 cursor-pointer hover:bg-accent/30 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value={method.id}
+                      checked={selectedShippingMethodId === method.id}
+                      onChange={() => setSelectedShippingMethodId(method.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="font-medium">{method.name}</div>
+                        <div className="text-sm font-semibold">
+                          {formatPrice(price.amount, price.currency)}
+                        </div>
+                      </div>
+                      {days && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Estimated delivery: {days}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <button
+              type="button"
+              disabled={
+                deliveryUpdating ||
+                (checkout?.isShippingRequired !== false &&
+                  (shippingMethods.length === 0 || !selectedShippingMethodId))
+              }
+              onClick={handleSubmit(handleContinue)}
+              className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {deliveryUpdating
+                ? "Selecting shipping..."
+                : shippingSelectedName
+                ? "Continue to Payment"
+                : "Select Shipping & Continue"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
