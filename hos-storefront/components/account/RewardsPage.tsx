@@ -1,11 +1,13 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import {
   GET_LOYALTY_BALANCE,
   GET_LOYALTY_TRANSACTIONS,
   GET_REWARDS,
 } from "@/lib/graphql/queries";
+import { LOYALTY_REDEEM_REWARD } from "@/lib/graphql/mutations";
 import { Loader2, Star, Gift, ArrowDownUp } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -28,6 +30,11 @@ export function RewardsPage() {
     variables: { first: 20 },
     fetchPolicy: "cache-and-network",
     errorPolicy: "ignore",
+  });
+
+  const [redeemReward, { loading: redeeming }] = useMutation(LOYALTY_REDEEM_REWARD, {
+    refetchQueries: [{ query: GET_LOYALTY_BALANCE }, { query: GET_LOYALTY_TRANSACTIONS }],
+    awaitRefetchQueries: true,
   });
 
   const balance = (balanceData as any)?.loyaltyPointsBalance?.balance ?? null;
@@ -116,12 +123,32 @@ export function RewardsPage() {
                 </div>
 
                 <button
-                  disabled={balance === null || Number(balance) < Number(reward.pointsRequired)}
+                  disabled={
+                    redeeming || balance === null || Number(balance) < Number(reward.pointsRequired)
+                  }
                   className="mt-5 w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-primary-foreground font-semibold hover:bg-primary/90 disabled:opacity-50"
-                  title="Redemption requires backend mutation support"
+                  title="Redeem this reward"
+                  onClick={async () => {
+                    try {
+                      const { data } = await redeemReward({
+                        variables: { rewardId: reward.id },
+                      });
+                      const errors = (data as any)?.loyaltyRedeemReward?.errors || [];
+                      if (errors.length) {
+                        alert(errors.map((e: any) => e.message).filter(Boolean).join("\n") || "Failed to redeem reward.");
+                        return;
+                      }
+                      alert("Reward redeemed successfully.");
+                    } catch (e: any) {
+                      console.error(e);
+                      alert("Failed to redeem reward. Please try again.");
+                    }
+                  }}
                 >
                   {balance !== null && Number(balance) >= Number(reward.pointsRequired)
-                    ? "Redeem (coming soon)"
+                    ? redeeming
+                      ? "Redeeming..."
+                      : "Redeem"
                     : "Not enough points"}
                 </button>
               </div>

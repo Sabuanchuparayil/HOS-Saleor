@@ -139,6 +139,28 @@ export const UPDATE_CHECKOUT_EMAIL = gql`
   }
 `;
 
+export const LOYALTY_REDEEM_REWARD = gql`
+  mutation LoyaltyRedeemReward($rewardId: ID!) {
+    loyaltyRedeemReward(rewardId: $rewardId) {
+      redemption {
+        id
+        status
+        redeemedAt
+        reward {
+          id
+          name
+          pointsRequired
+        }
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const UPDATE_CHECKOUT_DELIVERY_METHOD = gql`
   mutation UpdateCheckoutDeliveryMethod($checkoutId: ID!, $deliveryMethodId: ID!) {
     checkoutDeliveryMethodUpdate(id: $checkoutId, deliveryMethodId: $deliveryMethodId) {
