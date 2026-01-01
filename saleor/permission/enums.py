@@ -85,6 +85,15 @@ class SitePermissions(BasePermissionEnum):
     MANAGE_TRANSLATIONS = "site.manage_translations"
 
 
+class MarketplacePermissions(BasePermissionEnum):
+    MANAGE_SELLERS = "marketplace.manage_sellers"
+    MANAGE_PROCUREMENT = "marketplace.manage_procurement"
+    MANAGE_FULFILLMENT = "marketplace.manage_fulfillment"
+    MANAGE_CATALOG = "marketplace.manage_catalog"
+    MANAGE_MARKETING = "marketplace.manage_marketing"
+    MANAGE_FINANCE = "marketplace.manage_finance"
+
+
 PERMISSIONS_ENUMS = [
     AccountPermissions,
     AppPermission,
@@ -102,6 +111,7 @@ PERMISSIONS_ENUMS = [
     ProductTypePermissions,
     ShippingPermissions,
     SitePermissions,
+    MarketplacePermissions,
 ]
 
 
