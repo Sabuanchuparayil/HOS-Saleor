@@ -14,6 +14,7 @@ from ...core.doc_category import (
     DOC_CATEGORY_CHECKOUT,
     DOC_CATEGORY_DISCOUNTS,
     DOC_CATEGORY_GIFT_CARDS,
+    DOC_CATEGORY_MARKETPLACE,
     DOC_CATEGORY_MENU,
     DOC_CATEGORY_ORDERS,
     DOC_CATEGORY_PAGES,
@@ -48,6 +49,7 @@ from ..enums import (
     InvoiceErrorCode,
     JobStatusEnum,
     LanguageCodeEnum,
+    MarketplaceErrorCode,
     MenuErrorCode,
     MetadataErrorCode,
     OrderBulkCreateErrorCode,
@@ -799,6 +801,14 @@ class StockBulkUpdateError(Error):
 
 class UploadError(Error):
     code = UploadErrorCode(description="The error code.", required=True)
+
+
+class MarketplaceError(Error):
+    code = MarketplaceErrorCode(description="The error code.", required=True)
+
+    class Meta:
+        description = "Represents errors in marketplace mutations."
+        doc_category = DOC_CATEGORY_MARKETPLACE
 
 
 class WarehouseError(Error):
