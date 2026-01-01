@@ -251,21 +251,59 @@ GraphQLWebhookEventsInfoDirective = graphql.GraphQLDirective(
 # #region agent log
 try:
     import graphene
-    query_fields = [attr for attr in dir(Query) if not attr.startswith("_") and (hasattr(getattr(Query, attr, None), "__call__") or isinstance(getattr(Query, attr, None), graphene.Field))]
+    # Get all attributes from Query class
+    query_attrs = dir(Query)
+    # Check for graphene Field instances
+    query_fields = []
+    for attr in query_attrs:
+        if attr.startswith("_"):
+            continue
+        attr_value = getattr(Query, attr, None)
+        if isinstance(attr_value, (graphene.Field, ConnectionField, BaseField)):
+            query_fields.append(attr)
+    
     query_bases = [base.__name__ for base in Query.__bases__]
     has_homepage = "HomepageQueries" in query_bases
     has_seller = "SellerQueries" in query_bases
+    
     # Check if fields exist directly on Query class
     has_featured_products_field = hasattr(Query, "featured_products")
     has_sellers_field = hasattr(Query, "sellers")
-    # Check _meta.fields if available
+    has_featured_collections_field = hasattr(Query, "featured_collections")
+    
+    # Check _meta.fields if available (Graphene stores fields here)
     meta_fields = []
     if hasattr(Query, "_meta") and hasattr(Query._meta, "fields"):
         meta_fields = list(Query._meta.fields.keys()) if Query._meta.fields else []
-    debug_log("api.py:251", "About to build schema", {"queryClass": Query.__name__, "queryBases": query_bases, "hasHomepageQueriesInQuery": has_homepage, "hasSellerQueriesInQuery": has_seller, "hasFeaturedProductsField": has_featured_products_field, "hasSellersField": has_sellers_field, "metaFields": meta_fields[:20], "queryFieldsCount": len(query_fields)}, hypothesis_id="B")
+    
+    # Check if HomepageQueries and SellerQueries have their fields
+    homepage_fields = []
+    seller_fields = []
+    if hasattr(marketplace_schema, "HomepageQueries"):
+        hq = marketplace_schema.HomepageQueries
+        homepage_fields = [attr for attr in dir(hq) if not attr.startswith("_") and isinstance(getattr(hq, attr, None), (graphene.Field, ConnectionField, BaseField))]
+    if hasattr(marketplace_schema, "SellerQueries"):
+        sq = marketplace_schema.SellerQueries
+        seller_fields = [attr for attr in dir(sq) if not attr.startswith("_") and isinstance(getattr(sq, attr, None), (graphene.Field, ConnectionField, BaseField))]
+    
+    debug_log("api.py:251", "About to build schema", {
+        "queryClass": Query.__name__,
+        "queryBases": query_bases,
+        "hasHomepageQueriesInQuery": has_homepage,
+        "hasSellerQueriesInQuery": has_seller,
+        "hasFeaturedProductsField": has_featured_products_field,
+        "hasSellersField": has_sellers_field,
+        "hasFeaturedCollectionsField": has_featured_collections_field,
+        "metaFields": meta_fields[:30],
+        "queryFieldsCount": len(query_fields),
+        "queryFieldsSample": query_fields[:20],
+        "homepageQueriesFields": homepage_fields,
+        "sellerQueriesFields": seller_fields
+    }, hypothesis_id="B")
 except Exception as e:
     try:
-        debug_log("api.py:251", "Error checking Query class", {"error": str(e)}, hypothesis_id="B")
+        import traceback
+        debug_log("api.py:251", "Error checking Query class", {"error": str(e), "traceback": traceback.format_exc()}, hypothesis_id="B")
     except Exception:
         pass
 # #endregion
