@@ -40,6 +40,7 @@ class FandomCharacter(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("name",)
         indexes = [
             models.Index(fields=["slug"], name="character_slug_idx"),
@@ -74,6 +75,7 @@ class ProductCharacter(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-is_primary", "character__name")
         unique_together = [("product", "character")]
         indexes = [
@@ -131,6 +133,7 @@ class Quiz(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-featured", "title")
         indexes = [
             models.Index(fields=["slug"], name="quiz_slug_idx"),
@@ -177,6 +180,7 @@ class QuizSubmission(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-completed_at",)
         indexes = [
             models.Index(fields=["user"], name="quiz_submission_user_idx"),
