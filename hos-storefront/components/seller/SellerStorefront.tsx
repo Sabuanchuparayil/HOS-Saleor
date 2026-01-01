@@ -31,7 +31,7 @@ export function SellerStorefront({ slug }: SellerStorefrontProps) {
     script.text = JSON.stringify(jsonLd);
     document.head.appendChild(script);
     return () => {
-      document.head.removeChild(script);
+      script.parentNode?.removeChild(script);
     };
   }, [seller]);
 

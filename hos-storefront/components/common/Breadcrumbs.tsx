@@ -38,7 +38,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      script.parentNode?.removeChild(script);
     };
   }, [items]);
 
