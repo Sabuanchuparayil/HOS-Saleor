@@ -110,7 +110,7 @@ class Seller(ModelObjectType[models.Seller]):
                 qs = product_models.Product.objects.none()
         
         # Apply visibility filtering
-        from ...utils import get_user_or_app_from_context
+        from ..utils import get_user_or_app_from_context
         requestor = get_user_or_app_from_context(info.context)
         qs = qs.visible_to_user(requestor, channel)
         
