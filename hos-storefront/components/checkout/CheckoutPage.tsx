@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CHECKOUT } from "@/lib/graphql/queries";
-import { CREATE_CHECKOUT, COMPLETE_CHECKOUT } from "@/lib/graphql/mutations";
+import {
+  CHECKOUT_PAYMENT_CREATE,
+  COMPLETE_CHECKOUT,
+  CREATE_CHECKOUT,
+} from "@/lib/graphql/mutations";
 import { ShippingAddress } from "./ShippingAddress";
 import { PaymentMethod } from "./PaymentMethod";
 import { OrderReview } from "./OrderReview";
@@ -18,7 +22,9 @@ export function CheckoutPage() {
   const [checkoutId, setCheckoutId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const [shippingAddress, setShippingAddress] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<{ gateway: string; token: string } | null>(
+    null
+  );
   const [multiCheckout, setMultiCheckout] = useState<any>(null);
   const [multiIndex, setMultiIndex] = useState<number>(0);
 
@@ -49,7 +55,8 @@ export function CheckoutPage() {
   }, []);
 
   const [createCheckout] = useMutation(CREATE_CHECKOUT);
-  const [completeCheckout] = useMutation(COMPLETE_CHECKOUT);
+  const [createPayment] = useMutation(CHECKOUT_PAYMENT_CREATE);
+  const [completeCheckout, { loading: completing }] = useMutation(COMPLETE_CHECKOUT);
 
   const createNewCheckout = async () => {
     try {
@@ -82,8 +89,8 @@ export function CheckoutPage() {
     setCurrentStep("payment");
   };
 
-  const handlePaymentSubmit = (method: string) => {
-    setPaymentMethod(method);
+  const handlePaymentSubmit = (payment: { gateway: string; token: string }) => {
+    setPaymentMethod(payment);
     setCurrentStep("review");
   };
 
@@ -91,17 +98,57 @@ export function CheckoutPage() {
     if (!checkoutId) return;
 
     try {
-      const { data } = await completeCheckout({
+      const checkout = (data as any)?.checkout;
+      const amount = checkout?.totalPrice?.gross?.amount;
+      const currency = checkout?.totalPrice?.gross?.currency;
+
+      if (!paymentMethod) {
+        alert("Please select a payment method.");
+        return;
+      }
+      if (typeof amount !== "number" || !currency) {
+        alert("Checkout total is missing. Please refresh and try again.");
+        return;
+      }
+
+      // 1) Create payment with gateway + token (Stripe test token supported)
+      const paymentRes = await createPayment({
         variables: {
           checkoutId,
-          paymentData: {
-            gateway: paymentMethod || "stripe",
-            token: "dummy-token", // In production, get from payment provider
+          input: {
+            gateway: paymentMethod.gateway,
+            token: paymentMethod.token,
+            amount,
           },
         },
       });
 
-      const order = (data as any)?.checkoutComplete?.order;
+      const paymentErrors = (paymentRes.data as any)?.checkoutPaymentCreate?.errors || [];
+      if (paymentErrors.length) {
+        alert(
+          paymentErrors.map((e: any) => e.message).filter(Boolean).join("\n") ||
+            "Failed to create payment."
+        );
+        return;
+      }
+
+      // 2) Complete checkout (creates order)
+      const { data: completeData } = await completeCheckout({
+        variables: {
+          checkoutId,
+        },
+      });
+
+      const completeErrors = (completeData as any)?.checkoutComplete?.errors || [];
+      if (completeErrors.length) {
+        alert(
+          completeErrors.map((e: any) => e.message).filter(Boolean).join("\n") ||
+            "Failed to complete checkout."
+        );
+        return;
+      }
+
+      const order = (completeData as any)?.checkoutComplete?.order;
       if (order) {
         // Multi-checkout flow: progress to next seller checkout
         const storedMulti = localStorage.getItem("multiCheckout");
@@ -251,7 +298,7 @@ export function CheckoutPage() {
             <OrderReview
               checkout={checkout}
               shippingAddress={shippingAddress}
-              paymentMethod={paymentMethod}
+              paymentMethod={paymentMethod?.gateway || null}
               onComplete={handleCompleteOrder}
             />
           )}

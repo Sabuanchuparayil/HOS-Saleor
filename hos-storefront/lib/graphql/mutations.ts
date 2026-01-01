@@ -194,9 +194,29 @@ export const UPDATE_CHECKOUT_DELIVERY_METHOD = gql`
   }
 `;
 
+export const CHECKOUT_PAYMENT_CREATE = gql`
+  mutation CheckoutPaymentCreate($checkoutId: ID!, $input: PaymentInput!) {
+    checkoutPaymentCreate(checkoutId: $checkoutId, input: $input) {
+      payment {
+        id
+        gateway
+        total {
+          amount
+          currency
+        }
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const COMPLETE_CHECKOUT = gql`
-  mutation CompleteCheckout($checkoutId: ID!, $paymentData: PaymentInput!) {
-    checkoutComplete(checkoutId: $checkoutId, paymentData: $paymentData) {
+  mutation CompleteCheckout($checkoutId: ID!) {
+    checkoutComplete(checkoutId: $checkoutId) {
       order {
         id
         number
