@@ -3,6 +3,7 @@
 import graphene
 
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
+from ...core.fields import JSONString
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
@@ -23,8 +24,8 @@ class SellerLogisticsConfigUpdate(BaseMutation):
         shipping_provider = graphene.String(description="Shipping provider name.")
         handling_time_days = graphene.Int(description="Handling time in days.")
         free_shipping_threshold = graphene.Decimal(description="Free shipping threshold.")
-        custom_shipping_methods = graphene.JSONString(description="Custom shipping methods (JSON).")
-        logistics_partner_integration = graphene.JSONString(
+        custom_shipping_methods = JSONString(description="Custom shipping methods (JSON).")
+        logistics_partner_integration = JSONString(
             description="Logistics partner integration config (JSON)."
         )
 

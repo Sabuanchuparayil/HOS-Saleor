@@ -3,6 +3,7 @@
 import graphene
 
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
+from ...core.fields import JSONString
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
@@ -25,7 +26,7 @@ class SellerShippingMethodUpdateInput(SellerShippingMethodInput):
         description="Destination country code (ISO 3166-1 alpha-2)."
     )
     destination_city = graphene.String(description="Destination city.")
-    tiered_pricing = graphene.JSONString(description="Tiered pricing configuration (JSON).")
+    tiered_pricing = JSONString(description="Tiered pricing configuration (JSON).")
 
     class Meta:
         doc_category = DOC_CATEGORY_MARKETPLACE
