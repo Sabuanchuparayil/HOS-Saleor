@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Any
 import json
+import logging
 import os
-import sys
 import time
 
 import graphene
@@ -15,34 +15,25 @@ from .. import ResolveInfo
 from ..context import BaseContext
 from .entities import federated_entities
 
-# #region agent log
-# In Railway container, app root is /app. Write logs there so `railway run -- cat /app/.cursor/debug.log` works.
-log_path = "/app/.cursor/debug.log"
+logger = logging.getLogger(__name__)
+_SCHEMA_DEBUG = os.getenv("SALEOR_SCHEMA_DEBUG") == "1"
+
 def debug_log(location, message, data=None, hypothesis_id=None):
-    """Log debug information to file and stderr for Railway visibility."""
-    log_entry = {
+    """Optional schema debug logger. Emits JSON to standard logs when enabled."""
+    if not _SCHEMA_DEBUG:
+        return
+    payload = {
         "location": location,
         "message": message,
         "timestamp": time.time(),
         "sessionId": "debug-session",
         "runId": "run1",
     }
-    if data:
-        log_entry["data"] = data
     if hypothesis_id:
-        log_entry["hypothesisId"] = hypothesis_id
-    log_str = json.dumps(log_entry)
-    try:
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        with open(log_path, "a") as f:
-            f.write(log_str + "\n")
-    except Exception:
-        pass
-    try:
-        print(f"[DEBUG] {log_str}", file=sys.stderr)
-    except Exception:
-        pass
-# #endregion
+        payload["hypothesisId"] = hypothesis_id
+    if data:
+        payload["data"] = data
+    logger.info("[schema-debug] %s", json.dumps(payload, default=str))
 
 
 class _Any(graphene.Scalar):
@@ -241,8 +232,22 @@ def create_service_sdl_resolver(schema):
                 # Only pass non-scalar types - scalars are auto-discovered
                 if isinstance(t, type):
                     # Check if it's a scalar type class
-                    if issubclass(t, (graphene.Scalar, graphene.Float, graphene.Int, graphene.String, graphene.Boolean, graphene.ID)):
-                        continue
+                    try:
+                        if issubclass(
+                            t,
+                            (
+                                graphene.Scalar,
+                                graphene.Float,
+                                graphene.Int,
+                                graphene.String,
+                                graphene.Boolean,
+                                graphene.ID,
+                            ),
+                        ):
+                            continue
+                    except TypeError:
+                        # Some objects can satisfy isinstance(t, type) but still break issubclass.
+                        pass
                 # For GraphQL type objects, check if they're scalars
                 try:
                     if hasattr(t, 'name') and is_scalar_type(t):

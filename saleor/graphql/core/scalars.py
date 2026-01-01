@@ -1,8 +1,5 @@
 import datetime
 import decimal
-import json
-import os
-import time
 
 import graphene
 from graphene.types.generic import GenericScalar
@@ -14,23 +11,6 @@ from ...core.weight import (
     get_default_weight_unit,
 )
 
-# #region agent log
-log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".cursor", "debug.log")
-def debug_log(location, message, data=None, hypothesis_id=None):
-    """Log debug information to file."""
-    log_entry = {"location": location, "message": message, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1"}
-    if data:
-        log_entry["data"] = data
-    if hypothesis_id:
-        log_entry["hypothesisId"] = hypothesis_id
-    log_str = json.dumps(log_entry)
-    try:
-        with open(log_path, "a") as f:
-            f.write(log_str + "\n")
-    except Exception:
-        pass
-# #endregion
-
 
 class Decimal(graphene.Float):
     """Custom Decimal implementation.
@@ -38,29 +18,6 @@ class Decimal(graphene.Float):
     Returns Decimal as a float in the API,
     parses float to the Decimal on the way back.
     """
-    # Ensure this is treated as a scalar type, not a field type
-    # This helps prevent duplicate registration issues
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Mark as a scalar type to prevent duplicate registration
-        cls._graphene_type = cls
-    
-    # #region agent log
-    def __init__(self, *args, **kwargs):
-        try:
-            debug_log("scalars.py:Decimal.__init__", "Decimal instance created", {
-                "instanceId": id(self),
-                "module": self.__class__.__module__,
-                "className": self.__class__.__name__,
-                "args": str(args)[:100],
-                "kwargs": str(kwargs)[:100]
-            }, hypothesis_id="H3")
-        except Exception:
-            pass
-        super().__init__(*args, **kwargs)
-    # #endregion
-
     @staticmethod
     def parse_literal(node) -> decimal.Decimal | None:
         if isinstance(node, ast.FloatValue | ast.IntValue):

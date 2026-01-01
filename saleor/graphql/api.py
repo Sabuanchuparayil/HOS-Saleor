@@ -31,36 +31,34 @@ from .csv.schema import CsvMutations, CsvQueries
 from .discount.schema import DiscountMutations, DiscountQueries
 from .giftcard.schema import GiftCardMutations, GiftCardQueries
 from .invoice.schema import InvoiceMutations
-# #region agent log
+
+# NOTE: Avoid ad-hoc debug logging (file writes, hardcoded paths) in production code.
+# If you need schema diagnostics, enable them explicitly by setting SALEOR_SCHEMA_DEBUG=1
+# and reading standard application logs.
 import json
+import logging
 import os
-import sys
 import time
 
-# In Railway container, app root is /app. Write logs there so `railway run -- cat /app/.cursor/debug.log` works.
-log_path = "/app/.cursor/debug.log"
+logger = logging.getLogger(__name__)
+_SCHEMA_DEBUG = os.getenv("SALEOR_SCHEMA_DEBUG") == "1"
+
 def debug_log(location, message, data=None, hypothesis_id=None):
-    """Log debug information to both file and stdout for Railway visibility."""
-    log_entry = {"location": location, "message": message, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1"}
-    if data:
-        log_entry["data"] = data
+    if not _SCHEMA_DEBUG:
+        return
+    payload = {
+        "location": location,
+        "message": message,
+        "timestamp": time.time(),
+        "sessionId": "debug-session",
+        "runId": "run1",
+    }
     if hypothesis_id:
-        log_entry["hypothesisId"] = hypothesis_id
-    log_str = json.dumps(log_entry)
-    # Write to file
-    try:
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        with open(log_path, "a") as f:
-            f.write(log_str + "\n")
-    except Exception:
-        pass
-    # Also write to stdout for Railway logs
-    print(f"[DEBUG] {log_str}", file=sys.stderr)
-try:
-    debug_log("api.py:33", "About to import marketplace schema", hypothesis_id="A")
-except Exception:
-    pass
-# #endregion
+        payload["hypothesisId"] = hypothesis_id
+    if data:
+        payload["data"] = data
+    # Log as a single JSON line so it can be grepped in Railway logs.
+    logger.info("[schema-debug] %s", json.dumps(payload, default=str))
 try:
     from .marketplace.schema import (
         SellerQueries,
