@@ -307,6 +307,30 @@ except Exception as e:
     except Exception:
         pass
 # #endregion
+# #region agent log
+# Force Graphene to discover fields by accessing _meta before schema build
+try:
+    # This forces Graphene to initialize the Query class and discover fields
+    if hasattr(Query, "_meta"):
+        _ = Query._meta
+    # Also try to access fields directly to ensure they're discovered
+    if hasattr(Query, "featured_products"):
+        _ = Query.featured_products
+    if hasattr(Query, "sellers"):
+        _ = Query.sellers
+    debug_log("api.py:310", "Query class initialized, checking field discovery", {
+        "hasMeta": hasattr(Query, "_meta"),
+        "metaFieldsCount": len(Query._meta.fields) if hasattr(Query, "_meta") and hasattr(Query._meta, "fields") and Query._meta.fields else 0,
+        "hasFeaturedProducts": hasattr(Query, "featured_products"),
+        "hasSellers": hasattr(Query, "sellers"),
+    }, hypothesis_id="F")
+except Exception as e:
+    try:
+        import traceback
+        debug_log("api.py:310", "Error during Query initialization", {"error": str(e), "traceback": traceback.format_exc()}, hypothesis_id="F")
+    except Exception:
+        pass
+# #endregion
 schema = build_federated_schema(
     Query,
     mutation=Mutation,
