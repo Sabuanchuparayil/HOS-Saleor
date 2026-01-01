@@ -7,7 +7,7 @@ from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
 from saleor.marketplace.models import ReturnRequestStatus
-from ...permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ..enums import ReturnRequestStatusEnum
 from ..types import ReturnRequest
 

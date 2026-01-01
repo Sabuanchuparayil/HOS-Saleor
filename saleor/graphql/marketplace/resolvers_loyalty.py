@@ -139,7 +139,7 @@ def resolve_badge(info: ResolveInfo, id: Optional[str] = None, slug: Optional[st
     qs = models_loyalty.Badge.objects.using(connection_name)
 
     if id:
-        from ...graphql.core.utils import from_global_id_or_error
+        from ..core.utils import from_global_id_or_error
         from .types_loyalty import Badge
 
         _, badge_pk = from_global_id_or_error(id, Badge)

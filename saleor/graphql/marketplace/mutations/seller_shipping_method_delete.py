@@ -7,8 +7,8 @@ from ...core.mutations import BaseMutation, ModelDeleteMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
 from saleor.marketplace.context import get_seller_from_context
-from ...permission.enums import MarketplacePermissions
-from ...graphql.utils import get_user_or_app_from_context
+from saleor.permission.enums import MarketplacePermissions
+from ..utils import get_user_or_app_from_context
 from ..types import SellerShippingMethod
 
 

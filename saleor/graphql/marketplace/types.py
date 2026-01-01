@@ -88,7 +88,7 @@ class Seller(ModelObjectType[models.Seller]):
         from ..core.connection import create_connection_slice
         from ...core.context import ChannelContext
         from ..core.context import get_database_connection_name
-        from ...graphql.product.types.products import ProductCountableConnection
+        from ..product.types.products import ProductCountableConnection
         
         connection_name = get_database_connection_name(info.context)
         qs = product_models.Product.objects.using(connection_name).filter(seller=root)
@@ -110,7 +110,7 @@ class Seller(ModelObjectType[models.Seller]):
                 qs = product_models.Product.objects.none()
         
         # Apply visibility filtering
-        from ...graphql.utils import get_user_or_app_from_context
+        from ..utils import get_user_or_app_from_context
         requestor = get_user_or_app_from_context(info.context)
         qs = qs.visible_to_user(requestor, channel)
         
@@ -130,7 +130,7 @@ class Seller(ModelObjectType[models.Seller]):
         from ...order import models as order_models
         from ..core.connection import create_connection_slice
         from ..core.context import get_database_connection_name
-        from ...graphql.order.types import OrderCountableConnection
+        from ..order.types import OrderCountableConnection
         
         connection_name = get_database_connection_name(info.context)
         # Filter orders that have at least one order line belonging to this seller
@@ -174,7 +174,7 @@ class Seller(ModelObjectType[models.Seller]):
             calculate_seller_revenue,
             get_seller_order_count,
         )
-        from ...graphql.utils.filters import reporting_period_to_date
+        from ..utils.filters import reporting_period_to_date
         from ...core.prices import Money
         from decimal import Decimal
 
@@ -530,7 +530,7 @@ class ReturnRequest(ModelObjectType[models.ReturnRequest]):
     def resolve_order_id(root: models.ReturnRequest, info):
         """Return the order ID as a GlobalID."""
         from ..core.utils import to_global_id_or_none
-        from ...graphql.order.types import Order
+        from ..order.types import Order
         
         return to_global_id_or_none(Order, root.order_id)
 

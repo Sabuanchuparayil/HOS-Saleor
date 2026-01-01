@@ -4,11 +4,11 @@ import graphene
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
-from ....core.tracing import traced_atomic_transaction
+from saleor.core.tracing import traced_atomic_transaction
 from ...core.context import get_database_connection_name
 from saleor.marketplace import models
 from saleor.marketplace.error_codes import MarketplaceErrorCode
-from ....permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import DeprecatedModelMutation
 from ...core.types import MarketplaceError

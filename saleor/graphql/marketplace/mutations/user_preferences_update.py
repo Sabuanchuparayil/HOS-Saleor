@@ -7,7 +7,7 @@ import graphene
 from django.core.exceptions import ValidationError
 
 from ....account import models as account_models
-from ....core.tracing import traced_atomic_transaction
+from saleor.core.tracing import traced_atomic_transaction
 from ...core.context import get_database_connection_name
 from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
@@ -18,7 +18,7 @@ from ..types import UserPreferences
 from saleor.marketplace import error_codes
 
 if TYPE_CHECKING:
-    from ....account.models import User
+    from saleor.account.models import User
 
 
 PREFERENCES_METADATA_KEY = "preferences"

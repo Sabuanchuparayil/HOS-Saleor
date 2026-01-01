@@ -6,11 +6,11 @@ import graphene
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
-from ....account.models import User
+from saleor.account.models import User
 from ....channel.models import Channel
 from ...core.context import get_database_connection_name
 from saleor.marketplace.models import Seller, SellerStatus
-from ....permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import DeprecatedModelMutation
 from ...core.types import MarketplaceError
@@ -77,7 +77,7 @@ class SellerCreate(DeprecatedModelMutation):
         # Set tax_origin_address if provided
         tax_origin_address_id = cleaned_input.pop("tax_origin_address_id", None)
         if tax_origin_address_id:
-            from ....account.models import Address
+            from saleor.account.models import Address
 
             _, address_pk = from_global_id_or_error(tax_origin_address_id, "Address")
             try:

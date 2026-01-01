@@ -185,7 +185,7 @@ class SellerQueries(graphene.ObjectType):
     @staticmethod
     def resolve_seller_orders(_root, info, seller_id, **kwargs):
         from .resolvers import resolve_seller_orders
-        from ...graphql.order.types import OrderCountableConnection
+        from ..order.types import OrderCountableConnection
         
         qs = resolve_seller_orders(info, seller_id)
         return create_connection_slice(qs, info, kwargs, OrderCountableConnection)

@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 from ...core.context import get_database_connection_name
 from saleor.marketplace import error_codes, models
-from ....permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError

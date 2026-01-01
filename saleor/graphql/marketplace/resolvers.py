@@ -24,8 +24,8 @@ from saleor.marketplace.utils import (
 )
 from ..core.validators import validate_one_of_args_is_in_query
 from ...product import models as product_models
-from ...graphql.product.resolvers import resolve_collections
-from ...graphql.utils import get_user_or_app_from_context
+from ..product.resolvers import resolve_collections
+from ..utils import get_user_or_app_from_context
 from .types import NewsletterSubscription, Seller, SellerAnalytics, Theme, UserPreferences
 
 
@@ -391,8 +391,8 @@ def resolve_return_requests(
     status: Optional[str] = None,
 ):
     """Resolve return requests, optionally filtered by order and status."""
-    from ...graphql.utils import get_user_or_app_from_context
-    from ...permission.auth_filters import is_app, is_staff_user
+    from ..utils import get_user_or_app_from_context
+    from saleor.permission.auth_filters import is_app, is_staff_user
 
     qs = models.ReturnRequest.objects.using(
         get_database_connection_name(info.context)
@@ -407,7 +407,7 @@ def resolve_return_requests(
         qs = qs.filter(user=user)
 
     if order_id:
-        from ...graphql.order.types import Order
+        from ..order.types import Order
         _, order_pk = from_global_id_or_error(order_id, Order)
         qs = qs.filter(order_id=order_pk)
 
@@ -420,8 +420,8 @@ def resolve_return_requests(
 def resolve_return_request(info: ResolveInfo, id: str):
     """Resolve a return request by ID."""
     from .types import ReturnRequest
-    from ...graphql.utils import get_user_or_app_from_context
-    from ...permission.auth_filters import is_app, is_staff_user
+    from ..utils import get_user_or_app_from_context
+    from saleor.permission.auth_filters import is_app, is_staff_user
 
     _, db_id = from_global_id_or_error(id, ReturnRequest)
     return_request = models.ReturnRequest.objects.using(
@@ -443,7 +443,7 @@ def resolve_return_request(info: ResolveInfo, id: str):
 
 def resolve_seller_orders(info: ResolveInfo, seller_id: str):
     """Resolve orders for a specific seller."""
-    from ...graphql.utils import get_user_or_app_from_context
+    from ..utils import get_user_or_app_from_context
     from ...order import models as order_models
     from .types import Seller
     
@@ -457,7 +457,7 @@ def resolve_seller_orders(info: ResolveInfo, seller_id: str):
     ).distinct()
     
     # Permission check: sellers can only see their own orders, staff/app can see all
-    from ...permission.auth_filters import is_app, is_staff_user
+    from saleor.permission.auth_filters import is_app, is_staff_user
     is_staff_or_app = is_app(info.context) or is_staff_user(info.context)
     if not is_staff_or_app:
         # Check if requestor is the seller owner
@@ -474,7 +474,7 @@ def resolve_seller_settlements(
 ):
     """Resolve settlements for a specific seller."""
     from .types import Seller
-    from ...graphql.utils import get_user_or_app_from_context
+    from ..utils import get_user_or_app_from_context
     
     _, seller_pk = from_global_id_or_error(seller_id, Seller)
     connection_name = get_database_connection_name(info.context)
@@ -485,7 +485,7 @@ def resolve_seller_settlements(
     )
     
     # Permission check: sellers can only see their own settlements, staff/app can see all
-    from ...permission.auth_filters import is_app, is_staff_user
+    from saleor.permission.auth_filters import is_app, is_staff_user
     is_staff_or_app = is_app(info.context) or is_staff_user(info.context)
     if not is_staff_or_app:
         seller = models.Seller.objects.using(connection_name).filter(id=seller_pk).first()

@@ -7,7 +7,7 @@ from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
-from ....permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ..enums import PricingTypeEnum
 from ..types import PricingRule
 
@@ -67,7 +67,7 @@ class PricingRuleCreate(BaseMutation):
         seller = None
 
         if product_id:
-            from ....graphql.product.types import Product
+            from ...product.types import Product
             product = cls.get_node_or_error(
                 info, product_id, only_type=Product, field="product_id"
             )

@@ -30,7 +30,7 @@ class ReturnRequestCreate(BaseMutation):
     @classmethod
     def perform_mutation(cls, _root, info, order_id, order_line_id, reason):
         """Create return request."""
-        from ...graphql.order.types import Order, OrderLine
+        from ..order.types import Order, OrderLine
 
         order = cls.get_node_or_error(info, order_id, only_type=Order, field="order_id")
         order_line = cls.get_node_or_error(

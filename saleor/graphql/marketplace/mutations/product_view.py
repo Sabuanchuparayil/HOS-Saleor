@@ -6,7 +6,7 @@ from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from ....core.tracing import traced_atomic_transaction
+from saleor.core.tracing import traced_atomic_transaction
 from ...core.context import get_database_connection_name
 from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
@@ -15,7 +15,7 @@ from ...core.utils import from_global_id_or_error
 from saleor.marketplace import error_codes
 
 if TYPE_CHECKING:
-    from ....account.models import User
+    from saleor.account.models import User
 
 
 RECENTLY_VIEWED_METADATA_KEY = "recently_viewed_products"

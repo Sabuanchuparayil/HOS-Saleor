@@ -3,11 +3,11 @@
 import graphene
 from django.core.exceptions import ValidationError
 
-from ....account.models import Address, User
+from saleor.account.models import Address, User
 from ....channel.models import Channel
 from ...core.context import get_database_connection_name
 from saleor.marketplace import models
-from ....permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import ModelWithExtRefMutation
 from ...core.types import MarketplaceError

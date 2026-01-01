@@ -2,8 +2,8 @@
 
 import graphene
 
-from ....core.tracing import traced_atomic_transaction
-from ....permission.enums import MarketplacePermissions
+from saleor.core.tracing import traced_atomic_transaction
+from saleor.permission.enums import MarketplacePermissions
 from ...core.mutations import ModelWithExtRefMutation
 from ...core.types import MarketplaceError
 from ..enums import SellerStatusEnum

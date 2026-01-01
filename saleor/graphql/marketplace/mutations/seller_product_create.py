@@ -8,14 +8,14 @@ from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
 from saleor.marketplace.context import get_seller_from_context
-from ...permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ....product import models as product_models
-from ....graphql.product.mutations.product.product_create import (
+from ...product.mutations.product.product_create import (
     ProductCreate,
     ProductCreateInput,
 )
-from ....graphql.product.types import Product
-from ....graphql.utils import get_user_or_app_from_context
+from ...product.types import Product
+from ...utils import get_user_or_app_from_context
 from ..types import ProductSubmission
 
 
@@ -49,18 +49,18 @@ class SellerProductCreate(BaseMutation):
     @classmethod
     def perform_mutation(cls, _root, info, input):
         """Create product and product submission."""
-        from ....core.tracing import traced_atomic_transaction
-        from ....graphql.core.context import ChannelContext
-        from ....graphql.product.mutations.product.product_create import (
+        from saleor.core.tracing import traced_atomic_transaction
+        from ...core.context import ChannelContext
+        from ...product.mutations.product.product_create import (
             ProductCreate,
         )
-        from ....graphql.product.mutations.product import product_cleaner as cleaner
-        from ....graphql.attribute.utils.attribute_assignment import (
+        from ...product.mutations.product import product_cleaner as cleaner
+        from ...attribute.utils.attribute_assignment import (
             AttributeAssignmentMixin,
         )
-        from ....graphql.core.validators import clean_seo_fields
-        from ....graphql.product.mutations.product.utils import clean_tax_code
-        from ....graphql.plugins.dataloaders import get_plugin_manager_promise
+        from ...core.validators import clean_seo_fields
+        from ...product.mutations.product.utils import clean_tax_code
+        from ...plugins.dataloaders import get_plugin_manager_promise
 
         # Get seller from context or check if user owns a seller
         seller = get_seller_from_context(info.context)

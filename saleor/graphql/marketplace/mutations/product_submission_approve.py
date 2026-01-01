@@ -6,7 +6,7 @@ from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from saleor.marketplace import models
-from ...permission.enums import MarketplacePermissions
+from saleor.permission.enums import MarketplacePermissions
 from ..enums import ProductApprovalStatusEnum
 from ..types import ProductSubmission
 
