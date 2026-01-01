@@ -21,6 +21,7 @@ from ...csv import error_codes as csv_error_codes
 from ...discount import error_codes as discount_error_codes
 from ...giftcard import error_codes as giftcard_error_codes
 from ...invoice import error_codes as invoice_error_codes
+from ...marketplace import error_codes as marketplace_error_codes
 from ...menu import error_codes as menu_error_codes
 from ...order import error_codes as order_error_codes
 from ...page import error_codes as page_error_codes
@@ -42,6 +43,7 @@ from .doc_category import (
     DOC_CATEGORY_CHECKOUT,
     DOC_CATEGORY_DISCOUNTS,
     DOC_CATEGORY_GIFT_CARDS,
+    DOC_CATEGORY_MARKETPLACE,
     DOC_CATEGORY_ORDERS,
     DOC_CATEGORY_PAGES,
     DOC_CATEGORY_PAYMENTS,
@@ -95,7 +97,14 @@ def to_enum(enum_cls, *, type_name=None, **options) -> graphene.Enum:
         options.setdefault("deprecation_reason", deprecation_reason)
 
     type_name = type_name or (enum_cls.__name__ + "Enum")
-    enum_data = [(str_to_enum(code.upper()), code) for code, name in enum_cls.CHOICES]
+    # Django TextChoices use .choices (lowercase), older enums may use .CHOICES
+    # Use explicit None check to avoid incorrectly falling back when choices exists but is falsy
+    choices_attr = getattr(enum_cls, "choices", None)
+    if choices_attr is None:
+        choices_attr = getattr(enum_cls, "CHOICES", None)
+    if choices_attr is None:
+        raise ValueError(f"Enum class {enum_cls} must have either 'choices' or 'CHOICES' attribute")
+    enum_data = [(str_to_enum(code.upper()), code) for code, name in choices_attr]
     return graphene.Enum(type_name, enum_data, **options)
 
 
@@ -236,6 +245,11 @@ GiftCardErrorCode: Final[graphene.Enum] = graphene.Enum.from_enum(
     giftcard_error_codes.GiftCardErrorCode
 )
 GiftCardErrorCode.doc_category = DOC_CATEGORY_GIFT_CARDS
+
+MarketplaceErrorCode: Final[graphene.Enum] = graphene.Enum.from_enum(
+    marketplace_error_codes.MarketplaceErrorCode
+)
+MarketplaceErrorCode.doc_category = DOC_CATEGORY_MARKETPLACE
 
 MenuErrorCode: Final[graphene.Enum] = graphene.Enum.from_enum(
     menu_error_codes.MenuErrorCode
