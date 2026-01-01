@@ -1,5 +1,9 @@
 from collections import defaultdict
 from typing import Any
+import json
+import os
+import sys
+import time
 
 import graphene
 from django.conf import settings
@@ -10,6 +14,35 @@ from ...schema_printer import print_schema
 from .. import ResolveInfo
 from ..context import BaseContext
 from .entities import federated_entities
+
+# #region agent log
+# In Railway container, app root is /app. Write logs there so `railway run -- cat /app/.cursor/debug.log` works.
+log_path = "/app/.cursor/debug.log"
+def debug_log(location, message, data=None, hypothesis_id=None):
+    """Log debug information to file and stderr for Railway visibility."""
+    log_entry = {
+        "location": location,
+        "message": message,
+        "timestamp": time.time(),
+        "sessionId": "debug-session",
+        "runId": "run1",
+    }
+    if data:
+        log_entry["data"] = data
+    if hypothesis_id:
+        log_entry["hypothesisId"] = hypothesis_id
+    log_str = json.dumps(log_entry)
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        with open(log_path, "a") as f:
+            f.write(log_str + "\n")
+    except Exception:
+        pass
+    try:
+        print(f"[DEBUG] {log_str}", file=sys.stderr)
+    except Exception:
+        pass
+# #endregion
 
 
 class _Any(graphene.Scalar):
@@ -47,13 +80,55 @@ def build_federated_schema(
     query, mutation, types, subscription, directives=None
 ) -> graphene.Schema:
     """Create GraphQL schema that supports Apollo Federation."""
-    schema = graphene.Schema(
-        query=query,
-        mutation=mutation,
-        types=list(types) + [_Any, _Entity, _Service],
-        subscription=subscription,
-        directives=directives,
-    )
+    # #region agent log
+    try:
+        types_list = list(types) + [_Any, _Entity, _Service]
+        type_names = [getattr(t, "__name__", str(t)) for t in types_list]
+        decimal_in_types = [t for t in types_list if getattr(t, "__name__", None) == "Decimal"]
+        debug_log("federation/schema.py:50", "About to build federated schema", {
+            "typesCount": len(types_list),
+            "typeNames": type_names[:20],
+            "decimalInTypesCount": len(decimal_in_types),
+            "decimalInTypesIds": [id(t) for t in decimal_in_types],
+            "decimalInTypesModules": [getattr(t, "__module__", "unknown") for t in decimal_in_types]
+        }, hypothesis_id="H1")
+    except Exception:
+        pass
+    # #endregion
+    try:
+        schema = graphene.Schema(
+            query=query,
+            mutation=mutation,
+            types=list(types) + [_Any, _Entity, _Service],
+            subscription=subscription,
+            directives=directives,
+        )
+    except AssertionError as e:
+        # #region agent log
+        try:
+            import traceback
+            debug_log("federation/schema.py:57", "AssertionError during schema creation", {
+                "error": str(e),
+                "errorType": type(e).__name__,
+                "traceback": traceback.format_exc()[:500]
+            }, hypothesis_id="H1")
+        except Exception:
+            pass
+        # #endregion
+        raise
+    # #region agent log
+    try:
+        # Check if Decimal type exists in schema
+        decimal_type = schema.get_type("Decimal")
+        if decimal_type:
+            debug_log("federation/schema.py:57", "Decimal type found in schema after build", {
+                "decimalTypeId": id(decimal_type),
+                "decimalTypeName": decimal_type.name if hasattr(decimal_type, "name") else "unknown",
+                "decimalTypeModule": getattr(decimal_type, "__module__", "unknown")
+            }, hypothesis_id="H1")
+    except Exception:
+        pass
+    # #endregion
 
     entity_type = schema.get_type("_Entity")
     entity_type.resolve_type = create_entity_type_resolver(schema)
@@ -141,12 +216,74 @@ def resolve_entities(_, info: ResolveInfo, *, representations):
 
 def create_service_sdl_resolver(schema):
     # subscriptions are not handled by the federation protocol
-    schema_sans_subscriptions = graphene.Schema(
-        query=schema._query,
-        mutation=schema._mutation,
-        types=schema.types,
-        directives=schema._directives,
-    )
+    # #region agent log
+    original_decimal = None
+    try:
+        original_decimal = schema.get_type("Decimal")
+        original_types = list(schema.types) if hasattr(schema, "types") else []
+        decimal_in_original_types = [t for t in original_types if getattr(t, "__name__", None) == "Decimal"]
+        debug_log("federation/schema.py:144", "About to create schema_sans_subscriptions", {
+            "originalDecimalTypeId": id(original_decimal) if original_decimal else None,
+            "originalTypesCount": len(original_types),
+            "decimalInOriginalTypesCount": len(decimal_in_original_types),
+            "decimalInOriginalTypesIds": [id(t) for t in decimal_in_original_types]
+        }, hypothesis_id="H5")
+    except Exception:
+        pass
+    # #endregion
+    try:
+        # Filter out scalar types from schema.types to avoid duplicate registration
+        # Scalar types are auto-discovered from fields, so passing them explicitly causes duplicates
+        from graphql import is_scalar_type
+        types_to_pass = []
+        if hasattr(schema, "types"):
+            for t in schema.types:
+                # Only pass non-scalar types - scalars are auto-discovered
+                if isinstance(t, type):
+                    # Check if it's a scalar type class
+                    if issubclass(t, (graphene.Scalar, graphene.Float, graphene.Int, graphene.String, graphene.Boolean, graphene.ID)):
+                        continue
+                # For GraphQL type objects, check if they're scalars
+                try:
+                    if hasattr(t, 'name') and is_scalar_type(t):
+                        continue
+                except Exception:
+                    pass
+                types_to_pass.append(t)
+        else:
+            types_to_pass = []
+        
+        schema_sans_subscriptions = graphene.Schema(
+            query=schema._query,
+            mutation=schema._mutation,
+            types=types_to_pass,  # Only pass non-scalar types
+            directives=schema._directives,
+        )
+    except AssertionError as e:
+        # #region agent log
+        try:
+            import traceback
+            debug_log("federation/schema.py:157", "AssertionError in create_service_sdl_resolver", {
+                "error": str(e),
+                "errorType": type(e).__name__,
+                "traceback": traceback.format_exc()[:500],
+                "originalDecimalTypeId": id(original_decimal) if original_decimal else None
+            }, hypothesis_id="H5")
+        except Exception:
+            pass
+        # #endregion
+        raise
+    # #region agent log
+    try:
+        new_decimal = schema_sans_subscriptions.get_type("Decimal")
+        debug_log("federation/schema.py:169", "Schema_sans_subscriptions created", {
+            "newDecimalTypeId": id(new_decimal) if new_decimal else None,
+            "originalDecimalTypeId": id(original_decimal) if original_decimal else None,
+            "areSameInstance": id(new_decimal) == id(original_decimal) if (new_decimal and original_decimal) else False
+        }, hypothesis_id="H5")
+    except Exception:
+        pass
+    # #endregion
     # Render schema to string
     federated_schema_sdl = print_schema(schema_sans_subscriptions)
 

@@ -36,7 +36,9 @@ import json
 import os
 import sys
 import time
-log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".cursor", "debug.log")
+
+# In Railway container, app root is /app. Write logs there so `railway run -- cat /app/.cursor/debug.log` works.
+log_path = "/app/.cursor/debug.log"
 def debug_log(location, message, data=None, hypothesis_id=None):
     """Log debug information to both file and stdout for Railway visibility."""
     log_entry = {"location": location, "message": message, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1"}
@@ -47,6 +49,7 @@ def debug_log(location, message, data=None, hypothesis_id=None):
     log_str = json.dumps(log_entry)
     # Write to file
     try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
         with open(log_path, "a") as f:
             f.write(log_str + "\n")
     except Exception:
@@ -397,20 +400,88 @@ except Exception as e:
     except Exception:
         pass
 # #endregion
-schema = build_federated_schema(
-    Query,
-    mutation=Mutation,
-    types=(
+# #region agent log
+try:
+    import graphene as _graphene
+    from .core import scalars as saleor_scalars
+
+    types_list = (
         unit_enums
         + list(WEBHOOK_TYPES_MAP.values())
         + PAYMENT_ADDITIONAL_TYPES
         + ASSIGNED_ATTRIBUTE_TYPES
-        + [JSONString]  # Explicitly register JSONString to avoid duplicate registration
-    ),
-    subscription=Subscription,
-    directives=graphql.specified_directives
-    + [GraphQLDocDirective, GraphQLWebhookEventsInfoDirective],
-)
+        + [JSONString]
+    )
+
+    decimal_named_types = [
+        t for t in types_list if getattr(t, "__name__", None) == "Decimal"
+    ]
+    graphene_decimal = getattr(_graphene, "Decimal", None)
+
+    debug_log(
+        "api.py:400",
+        "About to build schema with types (Decimal diagnostics)",
+        {
+            "typesCount": len(types_list),
+            "decimalNamedTypesInTypesCount": len(decimal_named_types),
+            "decimalNamedTypesInTypesIds": [id(t) for t in decimal_named_types],
+            "decimalNamedTypesInTypesModules": [
+                getattr(t, "__module__", "unknown") for t in decimal_named_types
+            ],
+            "saleorDecimalId": id(saleor_scalars.Decimal),
+            "saleorDecimalModule": getattr(saleor_scalars.Decimal, "__module__", "unknown"),
+            "grapheneHasDecimal": graphene_decimal is not None,
+            "grapheneDecimalId": id(graphene_decimal) if graphene_decimal else None,
+            "grapheneDecimalModule": getattr(graphene_decimal, "__module__", None)
+            if graphene_decimal
+            else None,
+            "saleorDecimalIsGrapheneDecimal": bool(
+                graphene_decimal and saleor_scalars.Decimal is graphene_decimal
+            ),
+        },
+        hypothesis_id="H2",
+    )
+except Exception as e:
+    try:
+        debug_log(
+            "api.py:400",
+            "Error collecting Decimal diagnostics before schema build",
+            {"error": str(e), "errorType": type(e).__name__},
+            hypothesis_id="H2",
+        )
+    except Exception:
+        pass
+# #endregion
+try:
+    schema = build_federated_schema(
+        Query,
+        mutation=Mutation,
+        types=(
+            unit_enums
+            + list(WEBHOOK_TYPES_MAP.values())
+            + PAYMENT_ADDITIONAL_TYPES
+            + ASSIGNED_ATTRIBUTE_TYPES
+            + [JSONString]  # Explicitly register JSONString to avoid duplicate registration
+            # Note: Decimal is NOT explicitly registered - it extends graphene.Float and is auto-discovered
+            # Explicit registration causes duplicate type errors
+        ),
+        subscription=Subscription,
+        directives=graphql.specified_directives
+        + [GraphQLDocDirective, GraphQLWebhookEventsInfoDirective],
+    )
+except AssertionError as e:
+    # #region agent log
+    try:
+        from .core.scalars import Decimal
+        debug_log("api.py:413", "AssertionError during schema build", {
+            "error": str(e),
+            "decimalClassId": id(Decimal),
+            "decimalClassModule": Decimal.__module__
+        }, hypothesis_id="H1")
+    except Exception:
+        pass
+    # #endregion
+    raise
 # #region agent log
 try:
     query_type = schema.get_type("Query")

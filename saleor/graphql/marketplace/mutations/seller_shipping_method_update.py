@@ -6,6 +6,7 @@ from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.fields import JSONString
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
+from ...core.scalars import Decimal as DecimalScalar
 from saleor.marketplace import models
 from saleor.marketplace.context import get_seller_from_context
 from saleor.permission.enums import MarketplacePermissions
@@ -18,7 +19,7 @@ class SellerShippingMethodUpdateInput(SellerShippingMethodInput):
     """Input type for updating a shipping method (all fields optional)."""
 
     name = graphene.String(description="Name of the shipping method.")
-    price = graphene.Decimal(description="Shipping price.")
+    price = DecimalScalar(description="Shipping price.")
     estimated_days = graphene.Int(description="Estimated delivery time in days.")
     is_active = graphene.Boolean(description="Whether this shipping method is active.")
     fulfillment_center_id = graphene.ID(description="ID of the fulfillment center.")

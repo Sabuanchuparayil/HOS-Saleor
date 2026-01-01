@@ -6,6 +6,7 @@ from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.fields import JSONString
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
+from ...core.scalars import Decimal as DecimalScalar
 from saleor.marketplace import models
 from saleor.permission.enums import MarketplacePermissions
 from ..enums import FulfillmentMethodEnum
@@ -23,7 +24,7 @@ class SellerLogisticsConfigUpdate(BaseMutation):
         )
         shipping_provider = graphene.String(description="Shipping provider name.")
         handling_time_days = graphene.Int(description="Handling time in days.")
-        free_shipping_threshold = graphene.Decimal(description="Free shipping threshold.")
+        free_shipping_threshold = DecimalScalar(description="Free shipping threshold.")
         custom_shipping_methods = JSONString(description="Custom shipping methods (JSON).")
         logistics_partner_integration = JSONString(
             description="Logistics partner integration config (JSON)."
