@@ -25,6 +25,7 @@ from .channel.schema import ChannelMutations, ChannelQueries
 from .checkout.schema import CheckoutMutations, CheckoutQueries
 from .core.enums import unit_enums
 from .core.federation.schema import build_federated_schema
+from .core.fields import JSONString
 from .core.schema import CoreMutations, CoreQueries
 from .csv.schema import CsvMutations, CsvQueries
 from .discount.schema import DiscountMutations, DiscountQueries
@@ -404,6 +405,7 @@ schema = build_federated_schema(
         + list(WEBHOOK_TYPES_MAP.values())
         + PAYMENT_ADDITIONAL_TYPES
         + ASSIGNED_ATTRIBUTE_TYPES
+        + [JSONString]  # Explicitly register JSONString to avoid duplicate registration
     ),
     subscription=Subscription,
     directives=graphql.specified_directives
