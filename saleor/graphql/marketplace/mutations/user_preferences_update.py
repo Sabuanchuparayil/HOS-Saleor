@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import graphene
 from django.core.exceptions import ValidationError
 
-from ....account import models as account_models
+from saleor.account import models as account_models
 from saleor.core.tracing import traced_atomic_transaction
 from ...core.context import get_database_connection_name
 from ...core import ResolveInfo

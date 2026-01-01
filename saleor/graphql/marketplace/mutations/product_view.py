@@ -61,7 +61,7 @@ class ProductView(BaseMutation):
 
         # Verify product exists
         connection_name = get_database_connection_name(info.context)
-        from ....product import models as product_models
+        from saleor.product import models as product_models
 
         try:
             product = product_models.Product.objects.using(connection_name).get(

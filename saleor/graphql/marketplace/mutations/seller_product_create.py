@@ -9,7 +9,7 @@ from ...core.types import MarketplaceError
 from saleor.marketplace import models
 from saleor.marketplace.context import get_seller_from_context
 from saleor.permission.enums import MarketplacePermissions
-from ....product import models as product_models
+from saleor.product import models as product_models
 from ...product.mutations.product.product_create import (
     ProductCreate,
     ProductCreateInput,
