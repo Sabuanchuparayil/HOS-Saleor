@@ -207,25 +207,9 @@ def resolve_entities(_, info: ResolveInfo, *, representations):
 
 def create_service_sdl_resolver(schema):
     # subscriptions are not handled by the federation protocol
-    # #region agent log
-    original_decimal = None
-    try:
-        original_decimal = schema.get_type("Decimal")
-        original_types = list(schema.types) if hasattr(schema, "types") else []
-        decimal_in_original_types = [t for t in original_types if getattr(t, "__name__", None) == "Decimal"]
-        debug_log("federation/schema.py:144", "About to create schema_sans_subscriptions", {
-            "originalDecimalTypeId": id(original_decimal) if original_decimal else None,
-            "originalTypesCount": len(original_types),
-            "decimalInOriginalTypesCount": len(decimal_in_original_types),
-            "decimalInOriginalTypesIds": [id(t) for t in decimal_in_original_types]
-        }, hypothesis_id="H5")
-    except Exception:
-        pass
-    # #endregion
     try:
         # Filter out scalar types from schema.types to avoid duplicate registration
         # Scalar types are auto-discovered from fields, so passing them explicitly causes duplicates
-        from graphql import is_scalar_type
         types_to_pass = []
         if hasattr(schema, "types"):
             for t in schema.types:
@@ -233,27 +217,11 @@ def create_service_sdl_resolver(schema):
                 if isinstance(t, type):
                     # Check if it's a scalar type class
                     try:
-                        if issubclass(
-                            t,
-                            (
-                                graphene.Scalar,
-                                graphene.Float,
-                                graphene.Int,
-                                graphene.String,
-                                graphene.Boolean,
-                                graphene.ID,
-                            ),
-                        ):
+                        if issubclass(t, graphene.Scalar):
                             continue
                     except TypeError:
                         # Some objects can satisfy isinstance(t, type) but still break issubclass.
                         pass
-                # For GraphQL type objects, check if they're scalars
-                try:
-                    if hasattr(t, 'name') and is_scalar_type(t):
-                        continue
-                except Exception:
-                    pass
                 types_to_pass.append(t)
         else:
             types_to_pass = []
@@ -265,30 +233,7 @@ def create_service_sdl_resolver(schema):
             directives=schema._directives,
         )
     except AssertionError as e:
-        # #region agent log
-        try:
-            import traceback
-            debug_log("federation/schema.py:157", "AssertionError in create_service_sdl_resolver", {
-                "error": str(e),
-                "errorType": type(e).__name__,
-                "traceback": traceback.format_exc()[:500],
-                "originalDecimalTypeId": id(original_decimal) if original_decimal else None
-            }, hypothesis_id="H5")
-        except Exception:
-            pass
-        # #endregion
         raise
-    # #region agent log
-    try:
-        new_decimal = schema_sans_subscriptions.get_type("Decimal")
-        debug_log("federation/schema.py:169", "Schema_sans_subscriptions created", {
-            "newDecimalTypeId": id(new_decimal) if new_decimal else None,
-            "originalDecimalTypeId": id(original_decimal) if original_decimal else None,
-            "areSameInstance": id(new_decimal) == id(original_decimal) if (new_decimal and original_decimal) else False
-        }, hypothesis_id="H5")
-    except Exception:
-        pass
-    # #endregion
     # Render schema to string
     federated_schema_sdl = print_schema(schema_sans_subscriptions)
 
