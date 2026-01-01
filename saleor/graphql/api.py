@@ -58,10 +58,56 @@ except Exception:
     pass
 # #endregion
 try:
-    from .marketplace import schema as marketplace_schema
+    from .marketplace.schema import (
+        SellerQueries,
+        SellerMutations,
+        ThemeQueries,
+        ThemeMutations,
+        NewsletterQueries,
+        NewsletterMutations,
+        UserPreferencesQueries,
+        UserPreferencesMutations,
+        HomepageQueries,
+        FulfillmentCenterQueries,
+        ProductSubmissionQueries,
+        SellerShippingMethodQueries,
+        InventorySyncQueries,
+        ReturnRequestQueries,
+        LoyaltyPointsBalanceQueries,
+        LoyaltyPointsTransactionQueries,
+        BadgeQueries,
+        UserBadgeQueries,
+        RewardQueries,
+        RewardRedemptionQueries,
+        LoyaltyMutations,
+    )
+    # Create a namespace object for compatibility
+    class MarketplaceSchema:
+        SellerQueries = SellerQueries
+        SellerMutations = SellerMutations
+        ThemeQueries = ThemeQueries
+        ThemeMutations = ThemeMutations
+        NewsletterQueries = NewsletterQueries
+        NewsletterMutations = NewsletterMutations
+        UserPreferencesQueries = UserPreferencesQueries
+        UserPreferencesMutations = UserPreferencesMutations
+        HomepageQueries = HomepageQueries
+        FulfillmentCenterQueries = FulfillmentCenterQueries
+        ProductSubmissionQueries = ProductSubmissionQueries
+        SellerShippingMethodQueries = SellerShippingMethodQueries
+        InventorySyncQueries = InventorySyncQueries
+        ReturnRequestQueries = ReturnRequestQueries
+        LoyaltyPointsBalanceQueries = LoyaltyPointsBalanceQueries
+        LoyaltyPointsTransactionQueries = LoyaltyPointsTransactionQueries
+        BadgeQueries = BadgeQueries
+        UserBadgeQueries = UserBadgeQueries
+        RewardQueries = RewardQueries
+        RewardRedemptionQueries = RewardRedemptionQueries
+        LoyaltyMutations = LoyaltyMutations
+    marketplace_schema = MarketplaceSchema()
     # #region agent log
     try:
-        debug_log("api.py:43", "Marketplace schema imported successfully", {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries")}, hypothesis_id="A")
+        debug_log("api.py:43", "Marketplace schema imported successfully", {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries"), "marketplaceSchemaType": type(marketplace_schema).__name__}, hypothesis_id="A")
     except Exception:
         pass
     # #endregion
@@ -117,22 +163,22 @@ class Query(
     PluginsQueries,
     GiftCardQueries,
     MenuQueries,
-    marketplace_schema.SellerQueries,
-    marketplace_schema.ThemeQueries,
-    marketplace_schema.NewsletterQueries,
-    marketplace_schema.UserPreferencesQueries,
-    marketplace_schema.HomepageQueries,
-    marketplace_schema.FulfillmentCenterQueries,
-    marketplace_schema.ProductSubmissionQueries,
-    marketplace_schema.SellerShippingMethodQueries,
-    marketplace_schema.InventorySyncQueries,
-    marketplace_schema.ReturnRequestQueries,
-    marketplace_schema.LoyaltyPointsBalanceQueries,
-    marketplace_schema.LoyaltyPointsTransactionQueries,
-    marketplace_schema.BadgeQueries,
-    marketplace_schema.UserBadgeQueries,
-    marketplace_schema.RewardQueries,
-    marketplace_schema.RewardRedemptionQueries,
+    SellerQueries,
+    ThemeQueries,
+    NewsletterQueries,
+    UserPreferencesQueries,
+    HomepageQueries,
+    FulfillmentCenterQueries,
+    ProductSubmissionQueries,
+    SellerShippingMethodQueries,
+    InventorySyncQueries,
+    ReturnRequestQueries,
+    LoyaltyPointsBalanceQueries,
+    LoyaltyPointsTransactionQueries,
+    BadgeQueries,
+    UserBadgeQueries,
+    RewardQueries,
+    RewardRedemptionQueries,
     OrderQueries,
     PageQueries,
     PaymentQueries,
@@ -163,11 +209,11 @@ class Mutation(
     InvoiceMutations,
     MenuMutations,
     MetaMutations,
-    marketplace_schema.SellerMutations,
-    marketplace_schema.ThemeMutations,
-    marketplace_schema.NewsletterMutations,
-    marketplace_schema.UserPreferencesMutations,
-    marketplace_schema.LoyaltyMutations,
+    SellerMutations,
+    ThemeMutations,
+    NewsletterMutations,
+    UserPreferencesMutations,
+    LoyaltyMutations,
     OrderMutations,
     PageMutations,
     PaymentMutations,
