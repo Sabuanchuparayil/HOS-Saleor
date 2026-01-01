@@ -1,15 +1,8 @@
 """Marketplace app for multi-vendor functionality."""
 
-# Import submodules to make them available for direct import
-from . import error_codes
-from . import models
-from . import models_loyalty
-from . import utils_loyalty
-
-__all__ = [
-    "error_codes",
-    "models",
-    "models_loyalty",
-    "utils_loyalty",
-]
+# Note: We don't import models or submodules here to avoid early model loading
+# during Django setup. Submodules can still be imported directly:
+#   from saleor.marketplace import models_loyalty
+#   from saleor.marketplace import utils_loyalty
+#   from saleor.marketplace import error_codes
 
