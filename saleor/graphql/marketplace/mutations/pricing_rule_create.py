@@ -6,6 +6,7 @@ from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from ...core.scalars import Decimal as DecimalScalar
+from ...core.scalars import DateTime as DateTimeScalar
 from saleor.marketplace import models
 from saleor.permission.enums import MarketplacePermissions
 from ..enums import PricingTypeEnum
@@ -21,8 +22,8 @@ class PricingRuleCreate(BaseMutation):
         pricing_type = PricingTypeEnum(required=True, description="Type of pricing rule.")
         discount_percentage = DecimalScalar(description="Discount percentage (if applicable).")
         fixed_price = DecimalScalar(description="Fixed price override (if applicable).")
-        valid_from = graphene.DateTime(description="Start date for seasonal/promotional pricing.")
-        valid_until = graphene.DateTime(description="End date for seasonal/promotional pricing.")
+        valid_from = DateTimeScalar(description="Start date for seasonal/promotional pricing.")
+        valid_until = DateTimeScalar(description="End date for seasonal/promotional pricing.")
         country = graphene.String(description="Country code (optional, for country-specific pricing).")
         is_active = graphene.Boolean(default_value=True, description="Whether this pricing rule is active.")
 
