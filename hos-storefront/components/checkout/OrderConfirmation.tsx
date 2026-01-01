@@ -74,7 +74,7 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
             <p className="text-sm text-muted-foreground mb-1">Total</p>
             <p className="font-semibold">
               {order.total?.gross
-                ? formatPrice(order.total.gross.amount / 100, order.total.gross.currency)
+                ? formatPrice(order.total.gross.amount, order.total.gross.currency)
                 : "N/A"}
             </p>
           </div>
@@ -125,7 +125,7 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
                 </div>
                 {price && (
                   <p className="font-semibold">
-                    {formatPrice(price.amount / 100, price.currency)}
+                    {formatPrice(price.amount, price.currency)}
                   </p>
                 )}
               </div>
@@ -159,4 +159,5 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
     </div>
   );
 }
+
 

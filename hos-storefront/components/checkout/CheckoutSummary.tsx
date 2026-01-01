@@ -97,7 +97,7 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
                   {group.seller.name} ({group.seller.type === "b2b_wholesale" ? "B2B" : "B2C"})
                 </span>
                 <span className="font-medium">
-                  {formatPrice(group.subtotal.amount / 100, group.subtotal.currency)}
+                  {formatPrice(group.subtotal.amount, group.subtotal.currency)}
                 </span>
               </div>
             ))}
@@ -109,7 +109,7 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
       <div className="space-y-2 mb-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatPrice(subtotal.amount / 100, subtotal.currency)}</span>
+          <span>{formatPrice(subtotal.amount, subtotal.currency)}</span>
         </div>
 
         {shipping.amount > 0 && (
@@ -117,14 +117,14 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
             <span className="text-muted-foreground">
               Shipping{isMultiSeller ? " (split by seller)" : ""}
             </span>
-            <span>{formatPrice(shipping.amount / 100, shipping.currency)}</span>
+            <span>{formatPrice(shipping.amount, shipping.currency)}</span>
           </div>
         )}
 
         {tax.amount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Tax</span>
-            <span>{formatPrice(tax.amount / 100, tax.currency)}</span>
+            <span>{formatPrice(tax.amount, tax.currency)}</span>
           </div>
         )}
       </div>
@@ -132,7 +132,7 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
       <div className="border-t pt-4">
         <div className="flex justify-between font-bold text-lg">
           <span>Total</span>
-          <span>{formatPrice(total.amount / 100, total.currency)}</span>
+          <span>{formatPrice(total.amount, total.currency)}</span>
         </div>
       </div>
     </div>

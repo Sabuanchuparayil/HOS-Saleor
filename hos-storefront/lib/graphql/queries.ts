@@ -370,6 +370,7 @@ export const GET_CHECKOUT = gql`
     checkout(id: $id) {
       id
       token
+      email
       isShippingRequired
       channel {
         slug

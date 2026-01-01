@@ -96,7 +96,7 @@ export function OrderReview({
                   </div>
                   {price && (
                     <p className="font-semibold">
-                      {formatPrice(price.amount / 100, price.currency)}
+                      {formatPrice(price.amount, price.currency)}
                     </p>
                   )}
                 </div>
@@ -112,7 +112,7 @@ export function OrderReview({
               <span className="text-muted-foreground">Subtotal</span>
               <span>
                 {formatPrice(
-                  (checkout.subtotalPrice?.gross?.amount || 0) / 100,
+                  checkout.subtotalPrice?.gross?.amount || 0,
                   checkout.subtotalPrice?.gross?.currency || "USD"
                 )}
               </span>
@@ -122,7 +122,7 @@ export function OrderReview({
                 <span className="text-muted-foreground">Shipping</span>
                 <span>
                   {formatPrice(
-                    checkout.shippingPrice.gross.amount / 100,
+                    checkout.shippingPrice.gross.amount,
                     checkout.shippingPrice.gross.currency
                   )}
                 </span>
@@ -133,7 +133,7 @@ export function OrderReview({
                 <span>Total</span>
                 <span>
                   {formatPrice(
-                    (checkout.totalPrice?.gross?.amount || 0) / 100,
+                    checkout.totalPrice?.gross?.amount || 0,
                     checkout.totalPrice?.gross?.currency || "USD"
                   )}
                 </span>
@@ -162,4 +162,5 @@ export function OrderReview({
     </div>
   );
 }
+
 

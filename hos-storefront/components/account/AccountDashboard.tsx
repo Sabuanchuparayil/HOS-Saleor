@@ -186,7 +186,7 @@ export function AccountDashboard() {
                         ? new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency: order.total.gross.currency,
-                          }).format(order.total.gross.amount / 100)
+                          }).format(order.total.gross.amount)
                         : "N/A"}
                     </p>
                     <span

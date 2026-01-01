@@ -123,6 +123,22 @@ export const UPDATE_CHECKOUT_SHIPPING_ADDRESS = gql`
   }
 `;
 
+export const UPDATE_CHECKOUT_EMAIL = gql`
+  mutation UpdateCheckoutEmail($checkoutId: ID!, $email: String!) {
+    checkoutEmailUpdate(id: $checkoutId, email: $email) {
+      checkout {
+        id
+        email
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const UPDATE_CHECKOUT_DELIVERY_METHOD = gql`
   mutation UpdateCheckoutDeliveryMethod($checkoutId: ID!, $deliveryMethodId: ID!) {
     checkoutDeliveryMethodUpdate(id: $checkoutId, deliveryMethodId: $deliveryMethodId) {

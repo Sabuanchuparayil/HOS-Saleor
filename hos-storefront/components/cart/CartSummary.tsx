@@ -3,6 +3,9 @@
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@apollo/client/react";
+import { CREATE_CHECKOUT, DELETE_CHECKOUT_LINES } from "@/lib/graphql/mutations";
+import { useMemo, useState } from "react";
 
 interface CartSummaryProps {
   checkout: any;
@@ -10,6 +13,9 @@ interface CartSummaryProps {
 
 export function CartSummary({ checkout }: CartSummaryProps) {
   const router = useRouter();
+  const [isSplitting, setIsSplitting] = useState(false);
+  const [createCheckout] = useMutation(CREATE_CHECKOUT);
+  const [deleteLines] = useMutation(DELETE_CHECKOUT_LINES);
 
   const subtotal = checkout.subtotalPrice?.gross || { amount: 0, currency: "USD" };
   const shipping = checkout.shippingPrice?.gross || { amount: 0, currency: "USD" };
@@ -17,8 +23,97 @@ export function CartSummary({ checkout }: CartSummaryProps) {
   const total = checkout.totalPrice?.gross || { amount: 0, currency: "USD" };
   const discount = checkout.discount?.amount || 0;
 
-  const handleCheckout = () => {
-    router.push("/checkout");
+  const sellerGroups = useMemo(() => {
+    const lines: any[] = checkout?.lines || [];
+    const groups = new Map<string, { sellerId: string; sellerName: string; lines: any[] }>();
+    for (const line of lines) {
+      const sellerId = line?.variant?.product?.seller?.id || "no-seller";
+      const sellerName = line?.variant?.product?.seller?.storeName || "Unknown Seller";
+      const existing = groups.get(sellerId);
+      if (existing) existing.lines.push(line);
+      else groups.set(sellerId, { sellerId, sellerName, lines: [line] });
+    }
+    return Array.from(groups.values());
+  }, [checkout]);
+
+  const handleCheckout = async () => {
+    const hasMultipleSellers = sellerGroups.length > 1;
+    if (!hasMultipleSellers) {
+      router.push("/checkout");
+      return;
+    }
+
+    // Option A: create one checkout per seller (split shipping)
+    setIsSplitting(true);
+    try {
+      const channel = checkout?.channel?.slug || process.env.NEXT_PUBLIC_SALEOR_CHANNEL || null;
+      const email = checkout?.email || null;
+
+      const created: Array<{
+        sellerId: string;
+        sellerName: string;
+        checkoutId: string;
+        token: string;
+      }> = [];
+
+      for (const group of sellerGroups) {
+        const linesInput = group.lines.map((line: any) => ({
+          variantId: line.variant.id,
+          quantity: line.quantity,
+        }));
+
+        const { data } = await createCheckout({
+          variables: {
+            email,
+            channel,
+            lines: linesInput,
+          },
+        });
+
+        const newCheckout = (data as any)?.checkoutCreate?.checkout;
+        if (!newCheckout?.id) {
+          throw new Error("Failed to create seller checkout");
+        }
+
+        created.push({
+          sellerId: group.sellerId,
+          sellerName: group.sellerName,
+          checkoutId: newCheckout.id,
+          token: newCheckout.token,
+        });
+      }
+
+      // Clear the original cart checkout lines to avoid double-order risk
+      const lineIds = (checkout?.lines || []).map((l: any) => l.id);
+      if (lineIds.length) {
+        await deleteLines({
+          variables: {
+            checkoutId: checkout.id,
+            lines: lineIds,
+          },
+        });
+      }
+
+      // Store multi-checkout plan for /checkout
+      const payload = {
+        createdAt: Date.now(),
+        originalCheckoutId: checkout.id,
+        checkouts: created,
+        currentIndex: 0,
+        orders: [] as string[],
+      };
+      localStorage.setItem("multiCheckout", JSON.stringify(payload));
+      localStorage.removeItem("checkoutId");
+
+      router.push("/checkout");
+    } catch (e: any) {
+      console.error(e);
+      alert(
+        "Could not split your cart into separate seller checkouts. Please try again."
+      );
+    } finally {
+      setIsSplitting(false);
+    }
   };
 
   return (
@@ -62,9 +157,10 @@ export function CartSummary({ checkout }: CartSummaryProps) {
       
       <button
         onClick={handleCheckout}
+        disabled={isSplitting}
         className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors mb-4"
       >
-        Proceed to Checkout
+        {isSplitting ? "Preparing seller checkouts..." : "Proceed to Checkout"}
       </button>
       
       <Link

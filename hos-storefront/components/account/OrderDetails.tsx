@@ -137,7 +137,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                       {price && (
                         <div className="text-right">
                           <p className="font-semibold">
-                            {formatPrice(price.amount / 100, price.currency)}
+                            {formatPrice(price.amount, price.currency)}
                           </p>
                         </div>
                       )}
@@ -150,7 +150,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                   Subtotal:{" "}
                   <span className="font-semibold text-foreground">
                     {formatPrice(
-                      group.subtotal.amount / 100,
+                      group.subtotal.amount,
                       group.subtotal.currency
                     )}
                   </span>
@@ -194,7 +194,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                 <span>
                   {order.subtotal?.gross
                     ? formatPrice(
-                        order.subtotal.gross.amount / 100,
+                        order.subtotal.gross.amount,
                         order.subtotal.gross.currency
                       )
                     : "N/A"}
@@ -205,7 +205,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                   <span className="text-muted-foreground">Shipping</span>
                   <span>
                     {formatPrice(
-                      order.shippingPrice.gross.amount / 100,
+                      order.shippingPrice.gross.amount,
                       order.shippingPrice.gross.currency
                     )}
                   </span>
@@ -216,7 +216,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                   <span className="text-muted-foreground">Tax</span>
                   <span>
                     {formatPrice(
-                      order.total.tax.amount / 100,
+                      order.total.tax.amount,
                       order.total.tax.currency
                     )}
                   </span>
@@ -229,7 +229,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                 <span>
                   {order.total?.gross
                     ? formatPrice(
-                        order.total.gross.amount / 100,
+                        order.total.gross.amount,
                         order.total.gross.currency
                       )
                     : "N/A"}

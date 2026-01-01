@@ -88,7 +88,7 @@ export function CartItem({ line, onUpdateQuantity, onRemove }: CartItemProps) {
           <div className="flex items-center gap-4">
             {price && (
               <p className="font-semibold">
-                {formatPrice(price.amount / 100, price.currency)}
+                {formatPrice(price.amount, price.currency)}
               </p>
             )}
             <button
@@ -104,4 +104,5 @@ export function CartItem({ line, onUpdateQuantity, onRemove }: CartItemProps) {
     </div>
   );
 }
+
 

@@ -84,7 +84,7 @@ export function OrderHistory() {
                   <div className="text-right">
                     <p className="font-bold text-lg mb-2">
                       {order.total?.gross
-                        ? formatPrice(order.total.gross.amount / 100, order.total.gross.currency)
+                        ? formatPrice(order.total.gross.amount, order.total.gross.currency)
                         : "N/A"}
                     </p>
                     <p className="text-sm text-primary hover:underline">View Details →</p>
@@ -128,4 +128,5 @@ export function OrderHistory() {
     </div>
   );
 }
+
 

@@ -19,8 +19,26 @@ export function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [multiCheckout, setMultiCheckout] = useState<any>(null);
+  const [multiIndex, setMultiIndex] = useState<number>(0);
 
   useEffect(() => {
+    const storedMulti = localStorage.getItem("multiCheckout");
+    if (storedMulti) {
+      try {
+        const parsed = JSON.parse(storedMulti);
+        if (parsed?.checkouts?.length) {
+          const idx = typeof parsed.currentIndex === "number" ? parsed.currentIndex : 0;
+          setMultiCheckout(parsed);
+          setMultiIndex(idx);
+          setCheckoutId(parsed.checkouts[idx]?.checkoutId || null);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     const storedCheckoutId = localStorage.getItem("checkoutId");
     if (storedCheckoutId) {
       setCheckoutId(storedCheckoutId);
@@ -85,9 +103,36 @@ export function CheckoutPage() {
 
       const order = (data as any)?.checkoutComplete?.order;
       if (order) {
-        // Clear checkout from localStorage
+        // Multi-checkout flow: progress to next seller checkout
+        const storedMulti = localStorage.getItem("multiCheckout");
+        if (storedMulti) {
+          const parsed = JSON.parse(storedMulti);
+          const nextOrders = Array.isArray(parsed.orders) ? [...parsed.orders, order.id] : [order.id];
+          const nextIndex = (parsed.currentIndex ?? 0) + 1;
+
+          if (nextIndex < (parsed.checkouts?.length || 0)) {
+            parsed.orders = nextOrders;
+            parsed.currentIndex = nextIndex;
+            localStorage.setItem("multiCheckout", JSON.stringify(parsed));
+
+            // Reset step state for next seller
+            setShippingAddress(null);
+            setPaymentMethod(null);
+            setCurrentStep("shipping");
+            setMultiCheckout(parsed);
+            setMultiIndex(nextIndex);
+            setCheckoutId(parsed.checkouts[nextIndex]?.checkoutId || null);
+            return;
+          }
+
+          // Finished all seller checkouts
+          localStorage.removeItem("multiCheckout");
+          router.push("/account/orders");
+          return;
+        }
+
+        // Single-checkout flow
         localStorage.removeItem("checkoutId");
-        // Redirect to order confirmation
         router.push(`/order-confirmation/${order.id}`);
       }
     } catch (error) {
@@ -132,7 +177,17 @@ export function CheckoutPage() {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-8">Checkout</h1>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold">Checkout</h1>
+        {multiCheckout?.checkouts?.length > 1 && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Seller checkout {multiIndex + 1} of {multiCheckout.checkouts.length}:{" "}
+            <span className="font-medium text-foreground">
+              {multiCheckout.checkouts[multiIndex]?.sellerName || "Seller"}
+            </span>
+          </p>
+        )}
+      </div>
 
       {/* Progress Steps */}
       <div className="mb-8">

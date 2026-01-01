@@ -7,11 +7,13 @@ import { z } from "zod";
 import { useMutation } from "@apollo/client/react";
 import {
   UPDATE_CHECKOUT_DELIVERY_METHOD,
+  UPDATE_CHECKOUT_EMAIL,
   UPDATE_CHECKOUT_SHIPPING_ADDRESS,
 } from "@/lib/graphql/mutations";
 import { formatPrice } from "@/lib/utils";
 
 const addressSchema = z.object({
+  email: z.string().email("Valid email is required"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   streetAddress1: z.string().min(1, "Address is required"),
@@ -33,6 +35,7 @@ interface ShippingAddressProps {
 
 export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: ShippingAddressProps) {
   const [updateAddress] = useMutation(UPDATE_CHECKOUT_SHIPPING_ADDRESS);
+  const [updateEmail] = useMutation(UPDATE_CHECKOUT_EMAIL);
   const [updateDeliveryMethod, { loading: deliveryUpdating }] = useMutation(
     UPDATE_CHECKOUT_DELIVERY_METHOD
   );
@@ -49,6 +52,7 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
+      email: checkout?.email || "",
       country: "US",
     },
   });
@@ -56,6 +60,12 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
   const onFormSubmit = async (data: AddressFormData) => {
     try {
       if (checkout.id) {
+        await updateEmail({
+          variables: {
+            checkoutId: checkout.id,
+            email: data.email,
+          },
+        });
         await updateAddress({
           variables: {
             checkoutId: checkout.id,
@@ -133,6 +143,21 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
       )}
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Email <span className="text-destructive">*</span>
+          </label>
+          <input
+            {...register("email")}
+            type="email"
+            className="w-full px-4 py-2 border rounded-md"
+            placeholder="you@example.com"
+          />
+          {errors.email && (
+            <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">
