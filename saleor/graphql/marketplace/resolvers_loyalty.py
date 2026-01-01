@@ -17,7 +17,7 @@ from .types_loyalty import (
 
 def resolve_loyalty_balance(info: ResolveInfo, user_id: Optional[str] = None):
     """Resolve loyalty points balance for a user."""
-    user = info.context.user
+    user = getattr(info.context, "user", None)
 
     # If user_id is provided, check permissions
     if user_id:
@@ -27,13 +27,16 @@ def resolve_loyalty_balance(info: ResolveInfo, user_id: Optional[str] = None):
         _, db_user_id = from_global_id_or_error(user_id, User)
 
         # Users can only view their own balance unless they're staff
-        if not user.is_authenticated or (str(user.id) != str(db_user_id) and not user.is_staff):
+        if not user or not getattr(user, "is_authenticated", False) or (
+            str(getattr(user, "id", "")) != str(db_user_id)
+            and not getattr(user, "is_staff", False)
+        ):
             return None
 
         target_user_id = db_user_id
     else:
         # No user_id provided - return current user's balance
-        if not user.is_authenticated:
+        if not user or not getattr(user, "is_authenticated", False):
             return None
         target_user_id = user.id
 
@@ -45,7 +48,10 @@ def resolve_loyalty_balance(info: ResolveInfo, user_id: Optional[str] = None):
     if not balance:
         # Create balance if it doesn't exist
         from ...account.models import User
-        target_user = User.objects.using(connection_name).get(id=target_user_id)
+        try:
+            target_user = User.objects.using(connection_name).get(id=target_user_id)
+        except User.DoesNotExist:
+            return None
         balance = utils_loyalty.get_or_create_loyalty_balance(target_user)
 
     return balance
@@ -55,7 +61,7 @@ def resolve_loyalty_points_transactions(
     info: ResolveInfo, user_id: Optional[str] = None, **kwargs
 ):
     """Resolve loyalty points transactions for a user."""
-    user = info.context.user
+    user = getattr(info.context, "user", None)
 
     # If user_id is provided, check permissions
     if user_id:
@@ -65,13 +71,16 @@ def resolve_loyalty_points_transactions(
         _, db_user_id = from_global_id_or_error(user_id, User)
 
         # Users can only view their own transactions unless they're staff
-        if not user.is_authenticated or (str(user.id) != str(db_user_id) and not user.is_staff):
+        if not user or not getattr(user, "is_authenticated", False) or (
+            str(getattr(user, "id", "")) != str(db_user_id)
+            and not getattr(user, "is_staff", False)
+        ):
             return models_loyalty.LoyaltyPointsTransaction.objects.none()
 
         target_user_id = db_user_id
     else:
         # No user_id provided - return current user's transactions
-        if not user.is_authenticated:
+        if not user or not getattr(user, "is_authenticated", False):
             return models_loyalty.LoyaltyPointsTransaction.objects.none()
         target_user_id = user.id
 
@@ -83,7 +92,7 @@ def resolve_loyalty_points_transactions(
 
 def resolve_user_badges(info: ResolveInfo, user_id: Optional[str] = None, **kwargs):
     """Resolve badges earned by a user."""
-    user = info.context.user
+    user = getattr(info.context, "user", None)
 
     # If user_id is provided, check permissions
     if user_id:
@@ -93,13 +102,16 @@ def resolve_user_badges(info: ResolveInfo, user_id: Optional[str] = None, **kwar
         _, db_user_id = from_global_id_or_error(user_id, User)
 
         # Users can only view their own badges unless they're staff
-        if not user.is_authenticated or (str(user.id) != str(db_user_id) and not user.is_staff):
+        if not user or not getattr(user, "is_authenticated", False) or (
+            str(getattr(user, "id", "")) != str(db_user_id)
+            and not getattr(user, "is_staff", False)
+        ):
             return models_loyalty.UserBadge.objects.none()
 
         target_user_id = db_user_id
     else:
         # No user_id provided - return current user's badges
-        if not user.is_authenticated:
+        if not user or not getattr(user, "is_authenticated", False):
             return models_loyalty.UserBadge.objects.none()
         target_user_id = user.id
 
@@ -175,7 +187,7 @@ def resolve_reward_redemptions(
     info: ResolveInfo, user_id: Optional[str] = None, **kwargs
 ):
     """Resolve reward redemptions for a user."""
-    user = info.context.user
+    user = getattr(info.context, "user", None)
 
     # If user_id is provided, check permissions
     if user_id:
@@ -185,13 +197,16 @@ def resolve_reward_redemptions(
         _, db_user_id = from_global_id_or_error(user_id, User)
 
         # Users can only view their own redemptions unless they're staff
-        if not user.is_authenticated or (str(user.id) != str(db_user_id) and not user.is_staff):
+        if not user or not getattr(user, "is_authenticated", False) or (
+            str(getattr(user, "id", "")) != str(db_user_id)
+            and not getattr(user, "is_staff", False)
+        ):
             return models_loyalty.RewardRedemption.objects.none()
 
         target_user_id = db_user_id
     else:
         # No user_id provided - return current user's redemptions
-        if not user.is_authenticated:
+        if not user or not getattr(user, "is_authenticated", False):
             return models_loyalty.RewardRedemption.objects.none()
         target_user_id = user.id
 
