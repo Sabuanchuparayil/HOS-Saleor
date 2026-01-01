@@ -107,7 +107,7 @@ try:
     marketplace_schema = MarketplaceSchema()
     # #region agent log
     try:
-        debug_log("api.py:43", "Marketplace schema imported successfully", {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries"), "marketplaceSchemaType": type(marketplace_schema).__name__}, hypothesis_id="A")
+        debug_log("api.py:43", "Marketplace schema imported successfully", {"hasHomepageQueries": HomepageQueries is not None, "hasSellerQueries": SellerQueries is not None, "importedClasses": ["SellerQueries", "HomepageQueries", "ThemeQueries"]}, hypothesis_id="A")
     except Exception:
         pass
     # #endregion
