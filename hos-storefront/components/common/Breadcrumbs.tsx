@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
+import { useEffect } from "react";
+import { generateBreadcrumbJSONLD } from "@/lib/seo/jsonld";
 
 interface BreadcrumbItem {
   label: string;
@@ -11,6 +15,33 @@ interface BreadcrumbsProps {
 }
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
+  useEffect(() => {
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://hos-storefront-production.up.railway.app";
+
+    const jsonLdItems = [
+      { name: "Home", url: siteUrl },
+      ...items
+        .filter((i) => !!i.href)
+        .map((i) => ({
+          name: i.label,
+          url: `${siteUrl}${i.href}`,
+        })),
+    ];
+
+    const jsonLd = generateBreadcrumbJSONLD(jsonLdItems);
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute("data-breadcrumbs-jsonld", "true");
+    script.text = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [items]);
+
   return (
     <nav aria-label="Breadcrumb" className="mb-6">
       <ol className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -42,4 +73,5 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     </nav>
   );
 }
+
 

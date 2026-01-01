@@ -19,7 +19,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://hos-marketplaceweb-production.up.railway.app",
+    url:
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://hos-storefront-production.up.railway.app",
     siteName: "House of Spells Marketplace",
     title: "House of Spells Marketplace",
     description: "Discover magical products from authorized sellers worldwide",

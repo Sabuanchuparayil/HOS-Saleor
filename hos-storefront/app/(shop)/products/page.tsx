@@ -3,7 +3,8 @@ import { Footer } from "@/components/layout/Footer";
 import { ProductListing } from "@/components/product/ProductListing";
 import { Metadata } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hos-marketplaceweb-production.up.railway.app";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://hos-storefront-production.up.railway.app";
 
 export const metadata: Metadata = {
   title: "All Products",
