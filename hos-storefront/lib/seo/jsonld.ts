@@ -13,6 +13,28 @@ export function generateProductJSONLD(product: Product) {
   const price = product.defaultVariant?.pricing?.price?.gross;
   const sku = product.defaultVariant?.sku;
 
+  const reviews =
+    Array.isArray(product.reviews) && product.reviews.length
+      ? product.reviews
+          .filter((r) => r && (typeof r.rating === "number" || r.body || r.author))
+          .slice(0, 10)
+          .map((r) => ({
+            "@type": "Review",
+            author: r.author ? { "@type": "Person", name: r.author } : undefined,
+            reviewBody: r.body,
+            datePublished: r.created,
+            reviewRating:
+              typeof r.rating === "number"
+                ? {
+                    "@type": "Rating",
+                    ratingValue: r.rating,
+                    bestRating: 5,
+                    worstRating: 1,
+                  }
+                : undefined,
+          }))
+      : undefined;
+
   return {
     "@context": "https://schema.org/",
     "@type": "Product",
@@ -35,6 +57,7 @@ export function generateProductJSONLD(product: Product) {
             reviewCount: product.reviewCount,
           }
         : undefined,
+    review: reviews,
     offers: price
       ? {
           "@type": "Offer",

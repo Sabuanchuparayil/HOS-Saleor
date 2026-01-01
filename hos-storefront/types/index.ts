@@ -8,6 +8,12 @@ export interface Product {
   seoDescription?: string;
   rating?: number;
   reviewCount?: number;
+  reviews?: Array<{
+    author?: string;
+    rating?: number;
+    body?: string;
+    created?: string;
+  }>;
   defaultVariant?: ProductVariant;
   thumbnail?: Image;
   seller?: Seller;
