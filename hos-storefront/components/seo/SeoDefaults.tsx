@@ -1,11 +1,21 @@
 "use client";
 
-import { DefaultSeo } from "next-seo";
+import * as NextSeo from "next-seo";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://hos-storefront-production.up.railway.app";
 
 export function SeoDefaults() {
+  // Turbopack/ESM: `next-seo` exports can vary by version/build.
+  // Avoid hard failing the build by accessing via namespace import.
+  const DefaultSeo = (NextSeo as unknown as { DefaultSeo?: React.ComponentType<any> })
+    .DefaultSeo;
+
+  if (!DefaultSeo) {
+    // We rely on Next.js `metadata` for defaults; this is an optional enhancer.
+    return null;
+  }
+
   return (
     <DefaultSeo
       titleTemplate="%s | House of Spells"
