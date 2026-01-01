@@ -2,7 +2,7 @@
 
 import graphene
 
-from ...marketplace import models_loyalty
+from saleor.marketplace import models_loyalty
 
 
 class LoyaltyPointsTransactionTypeEnum(graphene.Enum):

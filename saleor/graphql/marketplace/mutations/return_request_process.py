@@ -5,8 +5,8 @@ import graphene
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
-from ...marketplace import models
-from ...marketplace.models import ReturnRequestStatus
+from saleor.marketplace import models
+from saleor.marketplace.models import ReturnRequestStatus
 from ...permission.enums import MarketplacePermissions
 from ..enums import ReturnRequestStatusEnum
 from ..types import ReturnRequest

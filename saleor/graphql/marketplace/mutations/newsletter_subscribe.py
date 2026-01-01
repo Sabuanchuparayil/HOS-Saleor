@@ -6,8 +6,8 @@ from django.utils import timezone
 
 from ....core.tracing import traced_atomic_transaction
 from ...core.context import get_database_connection_name
-from ....marketplace import models
-from ....marketplace.error_codes import MarketplaceErrorCode
+from saleor.marketplace import models
+from saleor.marketplace.error_codes import MarketplaceErrorCode
 from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError

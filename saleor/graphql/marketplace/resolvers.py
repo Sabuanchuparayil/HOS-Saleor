@@ -14,10 +14,10 @@ from ..core.enums import ReportingPeriod
 from prices import Money
 from ..core.utils import from_global_id_or_error
 from ..utils.filters import reporting_period_to_date
-from ...marketplace import models
-from ...marketplace.context import get_seller_from_context
-from ...marketplace.dataloaders import SellerByDomainLoader, SellerByIdLoader, SellerBySlugLoader
-from ...marketplace.utils import (
+from saleor.marketplace import models
+from saleor.marketplace.context import get_seller_from_context
+from saleor.marketplace.dataloaders import SellerByDomainLoader, SellerByIdLoader, SellerBySlugLoader
+from saleor.marketplace.utils import (
     calculate_seller_earnings_total,
     calculate_seller_revenue,
     get_seller_order_count,

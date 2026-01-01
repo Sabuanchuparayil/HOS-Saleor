@@ -7,8 +7,8 @@ from django.utils import timezone
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
-from ...marketplace import models
-from ...marketplace.context import get_seller_from_context
+from saleor.marketplace import models
+from saleor.marketplace.context import get_seller_from_context
 from ...permission.enums import MarketplacePermissions
 from ...graphql.utils import get_user_or_app_from_context
 from ..types_inventory import InventorySync

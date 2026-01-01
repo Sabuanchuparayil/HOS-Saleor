@@ -3,7 +3,7 @@
 import graphene
 from graphene import relay
 
-from ...marketplace import models
+from saleor.marketplace import models
 from ..core.connection import CountableConnection
 from ..core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ..core.scalars import DateTime

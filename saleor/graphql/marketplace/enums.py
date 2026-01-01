@@ -4,7 +4,7 @@ from typing import Final
 
 import graphene
 
-from ...marketplace.models import (
+from saleor.marketplace.models import (
     DistributorCategory,
     FulfillmentMethod,
     ProductApprovalStatus,
@@ -15,7 +15,7 @@ from ...marketplace.models import (
     SettlementStatus,
     TaxRegistrationType,
 )
-from ...marketplace.models import PricingType
+from saleor.marketplace.models import PricingType
 from ..core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ..core.enums import to_enum
 

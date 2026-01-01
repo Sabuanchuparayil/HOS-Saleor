@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from ....account.models import Address, User
 from ....channel.models import Channel
 from ...core.context import get_database_connection_name
-from ....marketplace import models
+from saleor.marketplace import models
 from ....permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import ModelWithExtRefMutation

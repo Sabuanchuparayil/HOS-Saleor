@@ -170,13 +170,13 @@ class SellerQueries(graphene.ObjectType):
         
         # Apply seller type filter
         if seller_type:
-            from ...marketplace.models import SellerType
+            from saleor.marketplace.models import SellerType
             seller_type_value = seller_type.value if hasattr(seller_type, 'value') else seller_type
             qs = qs.filter(seller_type=seller_type_value)
         
         # Apply status filter
         if status:
-            from ...marketplace.models import SellerStatus
+            from saleor.marketplace.models import SellerStatus
             status_value = status.value if hasattr(status, 'value') else status
             qs = qs.filter(status=status_value)
         

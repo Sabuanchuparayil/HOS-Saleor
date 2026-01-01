@@ -8,7 +8,7 @@ from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
 from ...core.types.common import MarketplaceError
 from ...core.utils import from_global_id_or_error
-from ....marketplace import error_codes, models_loyalty, utils_loyalty
+from saleor.marketplace import error_codes, models_loyalty, utils_loyalty
 from ..types_loyalty import RewardRedemption
 
 

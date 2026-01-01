@@ -1,6 +1,6 @@
 """DataLoaders for marketplace GraphQL."""
 
-from ...marketplace.dataloaders import (
+from saleor.marketplace.dataloaders import (
     SellerByDomainLoader,
     SellerByIdLoader,
     SellerBySlugLoader,

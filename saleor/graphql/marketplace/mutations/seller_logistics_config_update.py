@@ -5,7 +5,7 @@ import graphene
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
-from ...marketplace import models
+from saleor.marketplace import models
 from ...permission.enums import MarketplacePermissions
 from ..enums import FulfillmentMethodEnum
 from ..types import SellerLogisticsConfig

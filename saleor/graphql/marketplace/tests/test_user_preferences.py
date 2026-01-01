@@ -111,7 +111,7 @@ def test_user_preferences_update_basic_fields(user_api_client):
 def test_user_preferences_update_with_theme(user_api_client, db):
     """Test updating preferences with a theme ID."""
     import graphene
-    from ...marketplace.models import Theme
+    from saleor.marketplace.models import Theme
 
     # Create a test theme
     theme = Theme.objects.create(
@@ -234,7 +234,7 @@ def test_user_preferences_update_unauthenticated(api_client):
 def test_user_preferences_update_remove_theme(user_api_client, db):
     """Test removing theme preference by setting it to null."""
     import graphene
-    from ...marketplace.models import Theme
+    from saleor.marketplace.models import Theme
 
     # First, set a theme
     theme = Theme.objects.create(

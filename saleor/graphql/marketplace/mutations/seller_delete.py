@@ -2,7 +2,7 @@
 
 import graphene
 
-from ....marketplace import models
+from saleor.marketplace import models
 from ....permission.enums import MarketplacePermissions
 from ...core.mutations import ModelDeleteMutation
 from ...core.types import MarketplaceError

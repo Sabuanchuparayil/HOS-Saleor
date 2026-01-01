@@ -3,7 +3,7 @@
 from typing import Optional
 
 from ..core.context import get_database_connection_name
-from ...marketplace import models_loyalty, utils_loyalty
+from saleor.marketplace import models_loyalty, utils_loyalty
 from ..core import ResolveInfo
 from ..core.validators import validate_one_of_args_is_in_query
 from .types_loyalty import (

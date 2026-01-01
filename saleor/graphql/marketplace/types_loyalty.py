@@ -3,7 +3,7 @@
 import graphene
 from graphene import relay
 
-from ...marketplace import models_loyalty
+from saleor.marketplace import models_loyalty
 from ..core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ..core.scalars import DateTime
 from ..core.types import Image, ModelObjectType, Money

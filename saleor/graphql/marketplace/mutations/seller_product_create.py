@@ -6,8 +6,8 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
-from ...marketplace import models
-from ...marketplace.context import get_seller_from_context
+from saleor.marketplace import models
+from saleor.marketplace.context import get_seller_from_context
 from ...permission.enums import MarketplacePermissions
 from ....product import models as product_models
 from ....graphql.product.mutations.product.product_create import (

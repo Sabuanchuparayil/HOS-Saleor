@@ -12,7 +12,7 @@ from ...core import ResolveInfo
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
 from ...core.utils import from_global_id_or_error
-from ....marketplace import error_codes
+from saleor.marketplace import error_codes
 
 if TYPE_CHECKING:
     from ....account.models import User

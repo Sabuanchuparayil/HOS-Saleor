@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError
 from ...core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ...core.mutations import BaseMutation
 from ...core.types import MarketplaceError
-from ...marketplace import models
-from ...marketplace.models import ReturnRequestStatus
+from saleor.marketplace import models
+from saleor.marketplace.models import ReturnRequestStatus
 from ..types import ReturnRequest
 
 

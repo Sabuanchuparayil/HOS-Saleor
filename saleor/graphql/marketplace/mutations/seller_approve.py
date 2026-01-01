@@ -8,7 +8,7 @@ from ...core.mutations import ModelWithExtRefMutation
 from ...core.types import MarketplaceError
 from ..enums import SellerStatusEnum
 from ..types import Seller
-from ....marketplace import models
+from saleor.marketplace import models
 
 
 class SellerApprove(ModelWithExtRefMutation):

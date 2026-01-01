@@ -15,7 +15,7 @@ from ...core.types import MarketplaceError
 from ...core.utils import from_global_id_or_error
 from ..inputs import UserPreferencesInput
 from ..types import UserPreferences
-from ....marketplace import error_codes
+from saleor.marketplace import error_codes
 
 if TYPE_CHECKING:
     from ....account.models import User
@@ -83,7 +83,7 @@ class UserPreferencesUpdate(BaseMutation):
         if "themeId" in input_data and input_data["themeId"] is not None:
             theme_id = input_data["themeId"]
             # Validate theme exists
-            from ....marketplace import models
+            from saleor.marketplace import models
 
             _, theme_pk = from_global_id_or_error(theme_id, "Theme")
             try:

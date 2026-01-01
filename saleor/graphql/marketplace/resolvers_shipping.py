@@ -3,8 +3,8 @@
 from ..core import ResolveInfo
 from ..core.context import get_database_connection_name
 from ..core.utils import from_global_id_or_error
-from ...marketplace import models
-from ...marketplace.context import get_seller_from_context
+from saleor.marketplace import models
+from saleor.marketplace.context import get_seller_from_context
 from ...graphql.utils import get_user_or_app_from_context
 from .types import SellerShippingMethod
 

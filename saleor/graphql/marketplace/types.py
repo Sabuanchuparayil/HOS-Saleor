@@ -3,7 +3,7 @@
 import graphene
 from graphene import relay
 
-from ...marketplace import models
+from saleor.marketplace import models
 from ..core.connection import CountableConnection
 from ..core.doc_category import DOC_CATEGORY_MARKETPLACE
 from ..core.fields import BaseField, ConnectionField, JSONString
@@ -169,7 +169,7 @@ class Seller(ModelObjectType[models.Seller]):
 
     @staticmethod
     def resolve_analytics(root: models.Seller, info, period=None, seller_type=None):
-        from ...marketplace.utils import (
+        from saleor.marketplace.utils import (
             calculate_seller_earnings_total,
             calculate_seller_revenue,
             get_seller_order_count,

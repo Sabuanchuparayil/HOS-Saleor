@@ -9,7 +9,7 @@ from django.utils.text import slugify
 from ....account.models import User
 from ....channel.models import Channel
 from ...core.context import get_database_connection_name
-from ....marketplace.models import Seller, SellerStatus
+from saleor.marketplace.models import Seller, SellerStatus
 from ....permission.enums import MarketplacePermissions
 from ...core import ResolveInfo
 from ...core.mutations import DeprecatedModelMutation
