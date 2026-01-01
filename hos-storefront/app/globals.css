@@ -139,6 +139,23 @@
   }
 }
 
+/* Explicit theme override (wins over system preference when set by ThemeProvider) */
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #a78bfa;
+  --primary-foreground: #171717;
+  --secondary: #1f2937;
+  --secondary-foreground: #ededed;
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+  --accent: #1f2937;
+  --accent-foreground: #ededed;
+  --border: #374151;
+  --input: #374151;
+  --ring: #a78bfa;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

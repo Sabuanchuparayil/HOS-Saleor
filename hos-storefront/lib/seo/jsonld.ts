@@ -1,25 +1,46 @@
 import { Product, Seller, Collection } from "@/types";
 
+const DEFAULT_SITE_URL = "https://hos-storefront-production.up.railway.app";
+
+function getSiteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+}
+
 export function generateProductJSONLD(product: Product) {
   if (!product) return null;
+
+  const imageUrl = product.thumbnail?.url || product.images?.[0]?.url;
+  const price = product.defaultVariant?.pricing?.price?.gross;
+  const sku = product.defaultVariant?.sku;
 
   return {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.thumbnail?.url || product.images?.[0]?.url,
+    image: imageUrl,
+    sku: sku,
     brand: product.seller
       ? {
           "@type": "Brand",
           name: product.seller.storeName,
         }
       : undefined,
-    offers: product.defaultVariant?.pricing?.price?.gross
+    aggregateRating:
+      typeof product.rating === "number"
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            ratingCount: product.reviewCount,
+            reviewCount: product.reviewCount,
+          }
+        : undefined,
+    offers: price
       ? {
           "@type": "Offer",
-          priceCurrency: product.defaultVariant.pricing.price.gross.currency,
-          price: (product.defaultVariant.pricing.price.gross.amount / 100).toFixed(2),
+          priceCurrency: price.currency,
+          // Saleor returns Money amount as a decimal (not cents)
+          price: price.amount.toFixed(2),
           availability: "https://schema.org/InStock",
           seller: product.seller
             ? {
@@ -27,6 +48,7 @@ export function generateProductJSONLD(product: Product) {
                 name: product.seller.storeName,
               }
             : undefined,
+          url: `${getSiteUrl()}/products/${product.slug}`,
         }
       : undefined,
   };
@@ -41,7 +63,7 @@ export function generateSellerJSONLD(seller: Seller) {
     name: seller.storeName,
     description: seller.description,
     image: seller.logo?.url,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL}/sellers/${seller.slug}`,
+    url: `${getSiteUrl()}/sellers/${seller.slug}`,
   };
 }
 
@@ -69,4 +91,5 @@ export function generateBreadcrumbJSONLD(items: Array<{ name: string; url: strin
     })),
   };
 }
+
 

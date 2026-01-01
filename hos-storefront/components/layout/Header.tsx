@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Search, User } from "lucide-react";
+import { ShoppingCart, Search, User, Moon, Sun } from "lucide-react";
 import { SearchBar } from "./SearchBar";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export function Header() {
+  const { resolvedTheme, toggleTheme } = useTheme();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -43,6 +46,19 @@ export function Header() {
           <div className="hidden md:block flex-1 max-w-2xl">
             <SearchBar />
           </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-md hover:bg-accent"
+            aria-label="Toggle theme"
+            title="Toggle theme"
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
           <button
             type="button"
             className="md:hidden p-2 rounded-md hover:bg-accent"

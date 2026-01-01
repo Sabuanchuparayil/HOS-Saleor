@@ -7,6 +7,7 @@ export interface Product {
   seoTitle?: string;
   seoDescription?: string;
   rating?: number;
+  reviewCount?: number;
   defaultVariant?: ProductVariant;
   thumbnail?: Image;
   seller?: Seller;
@@ -80,4 +81,5 @@ export interface Cart {
   items: CartItem[];
   totalPrice: Money;
 }
+
 
