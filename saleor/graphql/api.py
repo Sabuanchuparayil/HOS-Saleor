@@ -33,11 +33,27 @@ from .invoice.schema import InvoiceMutations
 # #region agent log
 import json
 import os
+import sys
 import time
 log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".cursor", "debug.log")
+def debug_log(location, message, data=None, hypothesis_id=None):
+    """Log debug information to both file and stdout for Railway visibility."""
+    log_entry = {"location": location, "message": message, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1"}
+    if data:
+        log_entry["data"] = data
+    if hypothesis_id:
+        log_entry["hypothesisId"] = hypothesis_id
+    log_str = json.dumps(log_entry)
+    # Write to file
+    try:
+        with open(log_path, "a") as f:
+            f.write(log_str + "\n")
+    except Exception:
+        pass
+    # Also write to stdout for Railway logs
+    print(f"[DEBUG] {log_str}", file=sys.stderr)
 try:
-    with open(log_path, "a") as f:
-        f.write(json.dumps({"location": "api.py:33", "message": "About to import marketplace schema", "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "A"}) + "\n")
+    debug_log("api.py:33", "About to import marketplace schema", hypothesis_id="A")
 except Exception:
     pass
 # #endregion
@@ -45,16 +61,14 @@ try:
     from .marketplace import schema as marketplace_schema
     # #region agent log
     try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"location": "api.py:43", "message": "Marketplace schema imported successfully", "data": {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries")}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "A"}) + "\n")
+        debug_log("api.py:43", "Marketplace schema imported successfully", {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries")}, hypothesis_id="A")
     except Exception:
         pass
     # #endregion
 except ImportError as e:
     # #region agent log
     try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"location": "api.py:43", "message": "Failed to import marketplace schema", "data": {"error": str(e), "errorType": type(e).__name__}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "D"}) + "\n")
+        debug_log("api.py:43", "Failed to import marketplace schema", {"error": str(e), "errorType": type(e).__name__}, hypothesis_id="D")
     except Exception:
         pass
     # #endregion
@@ -62,8 +76,7 @@ except ImportError as e:
 except Exception as e:
     # #region agent log
     try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"location": "api.py:43", "message": "Unexpected error importing marketplace schema", "data": {"error": str(e), "errorType": type(e).__name__}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "E"}) + "\n")
+        debug_log("api.py:43", "Unexpected error importing marketplace schema", {"error": str(e), "errorType": type(e).__name__}, hypothesis_id="E")
     except Exception:
         pass
     # #endregion
@@ -237,24 +250,22 @@ GraphQLWebhookEventsInfoDirective = graphql.GraphQLDirective(
 )
 # #region agent log
 try:
-    with open(log_path, "a") as f:
-        import graphene
-        query_fields = [attr for attr in dir(Query) if not attr.startswith("_") and (hasattr(getattr(Query, attr, None), "__call__") or isinstance(getattr(Query, attr, None), graphene.Field))]
-        query_bases = [base.__name__ for base in Query.__bases__]
-        has_homepage = "HomepageQueries" in query_bases
-        has_seller = "SellerQueries" in query_bases
-        # Check if fields exist directly on Query class
-        has_featured_products_field = hasattr(Query, "featured_products")
-        has_sellers_field = hasattr(Query, "sellers")
-        # Check _meta.fields if available
-        meta_fields = []
-        if hasattr(Query, "_meta") and hasattr(Query._meta, "fields"):
-            meta_fields = list(Query._meta.fields.keys()) if Query._meta.fields else []
-        f.write(json.dumps({"location": "api.py:200", "message": "About to build schema", "data": {"queryClass": Query.__name__, "queryBases": query_bases, "hasHomepageQueriesInQuery": has_homepage, "hasSellerQueriesInQuery": has_seller, "hasFeaturedProductsField": has_featured_products_field, "hasSellersField": has_sellers_field, "metaFields": meta_fields[:20], "queryFieldsCount": len(query_fields)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "B"}) + "\n")
+    import graphene
+    query_fields = [attr for attr in dir(Query) if not attr.startswith("_") and (hasattr(getattr(Query, attr, None), "__call__") or isinstance(getattr(Query, attr, None), graphene.Field))]
+    query_bases = [base.__name__ for base in Query.__bases__]
+    has_homepage = "HomepageQueries" in query_bases
+    has_seller = "SellerQueries" in query_bases
+    # Check if fields exist directly on Query class
+    has_featured_products_field = hasattr(Query, "featured_products")
+    has_sellers_field = hasattr(Query, "sellers")
+    # Check _meta.fields if available
+    meta_fields = []
+    if hasattr(Query, "_meta") and hasattr(Query._meta, "fields"):
+        meta_fields = list(Query._meta.fields.keys()) if Query._meta.fields else []
+    debug_log("api.py:251", "About to build schema", {"queryClass": Query.__name__, "queryBases": query_bases, "hasHomepageQueriesInQuery": has_homepage, "hasSellerQueriesInQuery": has_seller, "hasFeaturedProductsField": has_featured_products_field, "hasSellersField": has_sellers_field, "metaFields": meta_fields[:20], "queryFieldsCount": len(query_fields)}, hypothesis_id="B")
 except Exception as e:
     try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"location": "api.py:200", "message": "Error checking Query class", "data": {"error": str(e)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "B"}) + "\n")
+        debug_log("api.py:251", "Error checking Query class", {"error": str(e)}, hypothesis_id="B")
     except Exception:
         pass
 # #endregion
@@ -273,17 +284,15 @@ schema = build_federated_schema(
 )
 # #region agent log
 try:
-    with open(log_path, "a") as f:
-        query_type = schema.get_type("Query")
-        field_names = [field.name for field in query_type.fields.values()] if query_type and hasattr(query_type, "fields") else []
-        has_sellers = "sellers" in field_names
-        has_featured_products = "featuredProducts" in field_names
-        has_featured_collections = "featuredCollections" in field_names
-        f.write(json.dumps({"location": "api.py:212", "message": "Schema built", "data": {"totalFields": len(field_names), "hasSellers": has_sellers, "hasFeaturedProducts": has_featured_products, "hasFeaturedCollections": has_featured_collections, "marketplaceFields": [f for f in field_names if "seller" in f.lower() or "featured" in f.lower()]}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "C"}) + "\n")
+    query_type = schema.get_type("Query")
+    field_names = [field.name for field in query_type.fields.values()] if query_type and hasattr(query_type, "fields") else []
+    has_sellers = "sellers" in field_names
+    has_featured_products = "featuredProducts" in field_names
+    has_featured_collections = "featuredCollections" in field_names
+    debug_log("api.py:285", "Schema built", {"totalFields": len(field_names), "hasSellers": has_sellers, "hasFeaturedProducts": has_featured_products, "hasFeaturedCollections": has_featured_collections, "marketplaceFields": [f for f in field_names if "seller" in f.lower() or "featured" in f.lower()]}, hypothesis_id="C")
 except Exception as e:
     try:
-        with open(log_path, "a") as f:
-            f.write(json.dumps({"location": "api.py:212", "message": "Error checking schema", "data": {"error": str(e)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "C"}) + "\n")
+        debug_log("api.py:285", "Error checking schema", {"error": str(e)}, hypothesis_id="C")
     except Exception:
         pass
 # #endregion
