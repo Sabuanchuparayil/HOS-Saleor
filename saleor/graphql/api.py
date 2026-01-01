@@ -30,6 +30,45 @@ from .csv.schema import CsvMutations, CsvQueries
 from .discount.schema import DiscountMutations, DiscountQueries
 from .giftcard.schema import GiftCardMutations, GiftCardQueries
 from .invoice.schema import InvoiceMutations
+# #region agent log
+import json
+import os
+import time
+log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".cursor", "debug.log")
+try:
+    with open(log_path, "a") as f:
+        f.write(json.dumps({"location": "api.py:33", "message": "About to import marketplace schema", "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "A"}) + "\n")
+except Exception:
+    pass
+# #endregion
+try:
+    from .marketplace import schema as marketplace_schema
+    # #region agent log
+    try:
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"location": "api.py:43", "message": "Marketplace schema imported successfully", "data": {"hasHomepageQueries": hasattr(marketplace_schema, "HomepageQueries"), "hasSellerQueries": hasattr(marketplace_schema, "SellerQueries")}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "A"}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+except ImportError as e:
+    # #region agent log
+    try:
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"location": "api.py:43", "message": "Failed to import marketplace schema", "data": {"error": str(e), "errorType": type(e).__name__}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "D"}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    raise
+except Exception as e:
+    # #region agent log
+    try:
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"location": "api.py:43", "message": "Unexpected error importing marketplace schema", "data": {"error": str(e), "errorType": type(e).__name__}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "E"}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    raise
+# #endregion
 from .menu.schema import MenuMutations, MenuQueries
 from .meta.schema import MetaMutations
 from .order.schema import OrderMutations, OrderQueries
@@ -65,6 +104,22 @@ class Query(
     PluginsQueries,
     GiftCardQueries,
     MenuQueries,
+    marketplace_schema.SellerQueries,
+    marketplace_schema.ThemeQueries,
+    marketplace_schema.NewsletterQueries,
+    marketplace_schema.UserPreferencesQueries,
+    marketplace_schema.HomepageQueries,
+    marketplace_schema.FulfillmentCenterQueries,
+    marketplace_schema.ProductSubmissionQueries,
+    marketplace_schema.SellerShippingMethodQueries,
+    marketplace_schema.InventorySyncQueries,
+    marketplace_schema.ReturnRequestQueries,
+    marketplace_schema.LoyaltyPointsBalanceQueries,
+    marketplace_schema.LoyaltyPointsTransactionQueries,
+    marketplace_schema.BadgeQueries,
+    marketplace_schema.UserBadgeQueries,
+    marketplace_schema.RewardQueries,
+    marketplace_schema.RewardRedemptionQueries,
     OrderQueries,
     PageQueries,
     PaymentQueries,
@@ -95,6 +150,11 @@ class Mutation(
     InvoiceMutations,
     MenuMutations,
     MetaMutations,
+    marketplace_schema.SellerMutations,
+    marketplace_schema.ThemeMutations,
+    marketplace_schema.NewsletterMutations,
+    marketplace_schema.UserPreferencesMutations,
+    marketplace_schema.LoyaltyMutations,
     OrderMutations,
     PageMutations,
     PaymentMutations,
@@ -175,6 +235,29 @@ GraphQLWebhookEventsInfoDirective = graphql.GraphQLDirective(
         graphql.DirectiveLocation.OBJECT,
     ],
 )
+# #region agent log
+try:
+    with open(log_path, "a") as f:
+        import graphene
+        query_fields = [attr for attr in dir(Query) if not attr.startswith("_") and (hasattr(getattr(Query, attr, None), "__call__") or isinstance(getattr(Query, attr, None), graphene.Field))]
+        query_bases = [base.__name__ for base in Query.__bases__]
+        has_homepage = "HomepageQueries" in query_bases
+        has_seller = "SellerQueries" in query_bases
+        # Check if fields exist directly on Query class
+        has_featured_products_field = hasattr(Query, "featured_products")
+        has_sellers_field = hasattr(Query, "sellers")
+        # Check _meta.fields if available
+        meta_fields = []
+        if hasattr(Query, "_meta") and hasattr(Query._meta, "fields"):
+            meta_fields = list(Query._meta.fields.keys()) if Query._meta.fields else []
+        f.write(json.dumps({"location": "api.py:200", "message": "About to build schema", "data": {"queryClass": Query.__name__, "queryBases": query_bases, "hasHomepageQueriesInQuery": has_homepage, "hasSellerQueriesInQuery": has_seller, "hasFeaturedProductsField": has_featured_products_field, "hasSellersField": has_sellers_field, "metaFields": meta_fields[:20], "queryFieldsCount": len(query_fields)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "B"}) + "\n")
+except Exception as e:
+    try:
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"location": "api.py:200", "message": "Error checking Query class", "data": {"error": str(e)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "B"}) + "\n")
+    except Exception:
+        pass
+# #endregion
 schema = build_federated_schema(
     Query,
     mutation=Mutation,
@@ -188,6 +271,22 @@ schema = build_federated_schema(
     directives=graphql.specified_directives
     + [GraphQLDocDirective, GraphQLWebhookEventsInfoDirective],
 )
+# #region agent log
+try:
+    with open(log_path, "a") as f:
+        query_type = schema.get_type("Query")
+        field_names = [field.name for field in query_type.fields.values()] if query_type and hasattr(query_type, "fields") else []
+        has_sellers = "sellers" in field_names
+        has_featured_products = "featuredProducts" in field_names
+        has_featured_collections = "featuredCollections" in field_names
+        f.write(json.dumps({"location": "api.py:212", "message": "Schema built", "data": {"totalFields": len(field_names), "hasSellers": has_sellers, "hasFeaturedProducts": has_featured_products, "hasFeaturedCollections": has_featured_collections, "marketplaceFields": [f for f in field_names if "seller" in f.lower() or "featured" in f.lower()]}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "C"}) + "\n")
+except Exception as e:
+    try:
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"location": "api.py:212", "message": "Error checking schema", "data": {"error": str(e)}, "timestamp": time.time(), "sessionId": "debug-session", "runId": "run1", "hypothesisId": "C"}) + "\n")
+    except Exception:
+        pass
+# #endregion
 
 
 def _fail(errors, **_kwargs) -> ExecutionResult:
