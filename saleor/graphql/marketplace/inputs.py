@@ -95,3 +95,22 @@ class NewsletterSubscribeInput(BaseInputObjectType):
 
     class Meta:
         doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class SellerDomainInput(BaseInputObjectType):
+    """Input type for seller domain."""
+
+    domain = graphene.String(
+        required=True, description="Domain name (e.g., store.example.com or example.com)."
+    )
+    is_primary = graphene.Boolean(
+        description="Whether this is the primary domain for the seller.",
+        default_value=False,
+    )
+    ssl_enabled = graphene.Boolean(
+        description="Whether SSL is enabled for this domain.",
+        default_value=False,
+    )
+
+    class Meta:
+        doc_category = DOC_CATEGORY_MARKETPLACE
