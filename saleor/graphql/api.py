@@ -325,12 +325,16 @@ try:
     # Check if HomepageQueries and SellerQueries have their fields
     homepage_fields = []
     seller_fields = []
-    if hasattr(marketplace_schema, "HomepageQueries"):
-        hq = marketplace_schema.HomepageQueries
+    try:
+        hq = HomepageQueries
         homepage_fields = [attr for attr in dir(hq) if not attr.startswith("_") and isinstance(getattr(hq, attr, None), (graphene.Field, ConnectionField, BaseField))]
-    if hasattr(marketplace_schema, "SellerQueries"):
-        sq = marketplace_schema.SellerQueries
+    except NameError:
+        pass
+    try:
+        sq = SellerQueries
         seller_fields = [attr for attr in dir(sq) if not attr.startswith("_") and isinstance(getattr(sq, attr, None), (graphene.Field, ConnectionField, BaseField))]
+    except NameError:
+        pass
     
     debug_log("api.py:251", "About to build schema", {
         "queryClass": Query.__name__,
