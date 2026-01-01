@@ -114,3 +114,82 @@ class SellerDomainInput(BaseInputObjectType):
 
     class Meta:
         doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class ThemeCreateInput(BaseInputObjectType):
+    """Input type for creating a theme."""
+
+    name = graphene.String(required=True, description="Name of the theme.")
+    slug = graphene.String(description="Slug for the theme (auto-generated if not provided).")
+    description = graphene.String(description="Description of the theme.")
+    is_default = graphene.Boolean(
+        description="Whether this is the default theme.",
+        default_value=False,
+    )
+    is_active = graphene.Boolean(
+        description="Whether this theme is active.",
+        default_value=True,
+    )
+    template_data = JSONString(
+        description="Theme template data (CSS variables, fonts, colors, etc.) as JSON."
+    )
+    preview_image = Upload(description="Preview image for the theme.")
+
+    class Meta:
+        doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class ThemeUpdateInput(BaseInputObjectType):
+    """Input type for updating a theme."""
+
+    name = graphene.String(description="Name of the theme.")
+    slug = graphene.String(description="Slug for the theme.")
+    description = graphene.String(description="Description of the theme.")
+    is_default = graphene.Boolean(description="Whether this is the default theme.")
+    is_active = graphene.Boolean(description="Whether this theme is active.")
+    template_data = JSONString(
+        description="Theme template data (CSS variables, fonts, colors, etc.) as JSON."
+    )
+    preview_image = Upload(description="Preview image for the theme.")
+
+    class Meta:
+        doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class UserPreferencesInput(BaseInputObjectType):
+    """Input type for user preferences."""
+
+    theme_id = graphene.ID(description="ID of the preferred theme.")
+    language_code = graphene.String(description="Preferred language code (e.g., 'en', 'es').")
+    currency_code = graphene.String(description="Preferred currency code (e.g., 'USD', 'EUR').")
+    timezone = graphene.String(description="Preferred timezone (e.g., 'America/New_York').")
+    email_notifications = graphene.Boolean(
+        description="Whether to receive email notifications.",
+        default_value=True,
+    )
+    marketing_emails = graphene.Boolean(
+        description="Whether to receive marketing emails.",
+        default_value=False,
+    )
+    recently_viewed_products_limit = graphene.Int(
+        description="Maximum number of recently viewed products to store.",
+        default_value=20,
+    )
+
+    class Meta:
+        doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class SellerStorefrontSettingsInput(BaseInputObjectType):
+    """Input type for seller storefront settings."""
+
+    theme_id = graphene.ID(description="ID of the theme to use for the storefront.")
+    custom_css = graphene.String(description="Custom CSS for the storefront.")
+    custom_js = graphene.String(description="Custom JavaScript for the storefront.")
+    header_html = graphene.String(description="Custom HTML for the header.")
+    footer_html = graphene.String(description="Custom HTML for the footer.")
+    homepage_layout = JSONString(description="Homepage layout configuration as JSON.")
+    navigation_config = JSONString(description="Navigation configuration as JSON.")
+
+    class Meta:
+        doc_category = DOC_CATEGORY_MARKETPLACE
