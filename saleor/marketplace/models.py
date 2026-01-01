@@ -173,6 +173,7 @@ class Seller(ModelWithMetadata, ModelWithExternalReference):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("store_name", "created_at")
         indexes = [
             *ModelWithMetadata.Meta.indexes,
@@ -253,6 +254,7 @@ class SellerDomain(ModelWithMetadata):
     ssl_certificate_issued_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "-is_primary", "domain")
         indexes = [
             BTreeIndex(fields=["seller"], name="seller_domain_seller_idx"),
@@ -300,6 +302,7 @@ class Theme(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("name",)
         indexes = [
             BTreeIndex(fields=["is_default"], name="theme_default_idx"),
@@ -330,6 +333,7 @@ class ThemeVersion(ModelWithMetadata):
     notes = models.TextField(blank=True, help_text="Release notes for this version")
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-version_number",)
         indexes = [
             BTreeIndex(fields=["theme", "version_number"], name="theme_version_idx"),
@@ -408,6 +412,7 @@ class SellerStorefrontSettings(ModelWithMetadata):
     contact_phone = models.CharField(max_length=255, blank=True)
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller",)
         indexes = [
             BTreeIndex(fields=["theme"], name="seller_settings_theme_idx"),
@@ -446,6 +451,7 @@ class SellerTaxRegistration(ModelWithMetadata):
     expires_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "country", "registration_type")
         constraints = [
             models.UniqueConstraint(
@@ -492,6 +498,7 @@ class SellerWarehouse(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "priority", "warehouse")
         indexes = [
             BTreeIndex(fields=["seller"], name="seller_warehouse_seller_idx"),
@@ -544,6 +551,7 @@ class FulfillmentCenter(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("priority", "name")
         indexes = [
             BTreeIndex(fields=["country"], name="fulfillment_center_country_idx"),
@@ -626,6 +634,7 @@ class SellerLogisticsConfig(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller",)
         indexes = [
             BTreeIndex(
@@ -694,6 +703,7 @@ class SellerShippingMethod(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "name")
         indexes = [
             BTreeIndex(fields=["seller"], name="seller_shipping_seller_idx"),
@@ -737,6 +747,7 @@ class OrderRoutingRule(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("priority", "name")
         indexes = [
             BTreeIndex(fields=["fulfillment_center"], name="routing_rule_center_idx"),
@@ -796,6 +807,7 @@ class ProductSubmission(ModelWithMetadata):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-submitted_at",)
         indexes = [
             BTreeIndex(fields=["seller"], name="product_submission_seller_idx"),
@@ -853,6 +865,7 @@ class ReturnPolicy(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "product", "return_period_days")
         indexes = [
             BTreeIndex(fields=["seller"], name="return_policy_seller_idx"),
@@ -926,6 +939,7 @@ class ReturnRequest(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-requested_at",)
         indexes = [
             BTreeIndex(fields=["order"], name="return_request_order_idx"),
@@ -982,6 +996,7 @@ class InventorySync(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-synced_at",)
         indexes = [
             BTreeIndex(fields=["product_variant"], name="inventory_sync_variant_idx"),
@@ -1066,6 +1081,7 @@ class PricingRule(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at",)
         indexes = [
             BTreeIndex(fields=["product"], name="pricing_rule_product_idx"),
@@ -1131,6 +1147,7 @@ class PaymentGatewayConfig(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller", "gateway_name")
         indexes = [
             BTreeIndex(fields=["seller"], name="payment_gateway_seller_idx"),
@@ -1190,6 +1207,7 @@ class NewsletterSubscription(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at",)
         indexes = [
             BTreeIndex(fields=["email"], name="newsletter_email_idx"),
@@ -1272,6 +1290,7 @@ class SellerSettlement(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at", "-id")
         indexes = [
             BTreeIndex(fields=["seller"], name="settlement_seller_idx"),

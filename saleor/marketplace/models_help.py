@@ -45,6 +45,7 @@ class HelpCategory(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("order", "name")
         verbose_name_plural = "Help categories"
         indexes = [
@@ -110,6 +111,7 @@ class HelpArticle(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("order", "title")
         indexes = [
             models.Index(fields=["slug"], name="help_article_slug_idx"),
@@ -159,6 +161,7 @@ class HelpArticleView(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-viewed_at",)
         indexes = [
             models.Index(fields=["article"], name="help_article_view_article_idx"),
@@ -247,6 +250,7 @@ class ContactSupportTicket(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("-created_at",)
         indexes = [
             models.Index(fields=["ticket_number"], name="support_ticket_number_idx"),
@@ -295,6 +299,7 @@ class ContactSupportTicketMessage(models.Model):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("created_at",)
         indexes = [
             models.Index(fields=["ticket"], name="support_ticket_msg_ticket_idx"),

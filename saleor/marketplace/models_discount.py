@@ -58,6 +58,7 @@ class SellerDiscountConfig(ModelWithMetadata):
     )
 
     class Meta:
+        app_label = "marketplace"
         ordering = ("seller",)
         indexes = [
             BTreeIndex(fields=["seller"], name="discount_config_seller_idx"),
