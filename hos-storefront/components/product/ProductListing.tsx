@@ -22,7 +22,6 @@ export function ProductListing() {
       first: itemsPerPage,
       filter: {
         ...(filters.category && { categories: [filters.category] }),
-        ...(filters.seller && { seller: filters.seller }),
         ...(filters.priceRange && {
           price: {
             gte: filters.priceRange.min,
