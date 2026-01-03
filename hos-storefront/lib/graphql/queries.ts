@@ -367,10 +367,6 @@ export const GET_CHECKOUT = gql`
               url
               alt
             }
-            seller {
-              id
-              storeName
-            }
           }
           pricing {
             price {
