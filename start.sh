@@ -107,6 +107,20 @@ python3 manage.py migrate --noinput || {
 echo ""
 echo "Migrations completed successfully!"
 
+# Optional: auto-configure Stripe gateway plugin (deprecated plugin) when keys are provided.
+# This makes Stripe appear in `shop.availablePaymentGateways` without manual dashboard steps.
+if [ -n "${STRIPE_PUBLIC_API_KEY:-}" ] && [ -n "${STRIPE_SECRET_API_KEY:-}" ]; then
+    STRIPE_AUTO_CONFIGURE_BOOL=$(python3 -c "import os; v=(os.environ.get('STRIPE_AUTO_CONFIGURE','1') or '').strip().lower(); print('1' if v in ('1','true','yes','y') else '0')")
+    if [ "$STRIPE_AUTO_CONFIGURE_BOOL" = "1" ]; then
+        echo ""
+        echo "Configuring Stripe gateway plugin (auto)..."
+        python3 manage.py configure_stripe_gateway || {
+            echo "ERROR: Failed to configure Stripe gateway plugin."
+            exit 1
+        }
+    fi
+fi
+
 # Create superuser if environment variables are set (one-time operation)
 if [ -n "${DJANGO_SUPERUSER_EMAIL:-}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD:-}" ]; then
     echo ""

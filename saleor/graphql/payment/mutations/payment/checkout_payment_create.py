@@ -287,6 +287,19 @@ class CheckoutPaymentCreate(BaseMutation, I18nMixin):
         extra_data = {
             "customer_user_agent": info.context.META.get("HTTP_USER_AGENT"),
         }
+        # Stripe gateway plugin expects `payment_method_id` in `PaymentData.data`.
+        # When using `checkoutPaymentCreate`, the only client-provided secure token field
+        # is `input.token`, so we map it to `payment_method_id` for the Stripe plugin.
+        try:
+            from saleor.payment.gateways.stripe.consts import PLUGIN_ID as STRIPE_PLUGIN_ID
+
+            if gateway == STRIPE_PLUGIN_ID:
+                token = input.get("token")
+                if token:
+                    extra_data["payment_method_id"] = token
+        except Exception:
+            # Avoid breaking payment creation if stripe code is not present
+            pass
 
         metadata = input.get("metadata")
 

@@ -119,6 +119,10 @@ export function CheckoutPage() {
             gateway: paymentMethod.gateway,
             token: paymentMethod.token,
             amount,
+            returnUrl:
+              process.env.NEXT_PUBLIC_SITE_URL
+                ? `${process.env.NEXT_PUBLIC_SITE_URL}/checkout`
+                : undefined,
           },
         },
       });
