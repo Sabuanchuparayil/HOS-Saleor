@@ -45,15 +45,6 @@ export const GET_PRODUCTS = gql`
             url
             alt
           }
-          seller {
-            id
-            storeName
-            slug
-            logo {
-              url
-            }
-          }
-          approvalStatus
         }
       }
       pageInfo {
@@ -78,21 +69,6 @@ export const GET_PRODUCT_BY_SLUG = gql`
           seoTitle
           seoDescription
           rating
-          seller {
-            id
-            storeName
-            slug
-            description
-            logo {
-              url
-            }
-            sellerType
-          }
-          approvalStatus
-          rrp {
-            amount
-            currency
-          }
           variants {
             id
             name
@@ -120,10 +96,6 @@ export const GET_PRODUCT_BY_SLUG = gql`
             name
             slug
           }
-          countrySpecificPricing
-          countrySpecificStock
-          complianceData
-          isExclusiveToSeller
         }
       }
     }
