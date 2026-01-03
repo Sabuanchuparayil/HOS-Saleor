@@ -10,6 +10,7 @@ import { DiscountCode } from "./DiscountCode";
 import { Loader2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getCheckoutLineGroup } from "@/lib/checkout/grouping";
 
 export function CartPage() {
   const router = useRouter();
@@ -102,8 +103,9 @@ export function CartPage() {
 
   // Group items by seller for multi-seller order splitting
   const itemsBySeller = checkout.lines.reduce((acc: any, line: any) => {
-    const sellerId = line.variant?.product?.seller?.id || "no-seller";
-    const sellerName = line.variant?.product?.seller?.storeName || "Unknown Seller";
+    const group = getCheckoutLineGroup(line);
+    const sellerId = group.id;
+    const sellerName = group.mode === "seller" ? group.name : `${group.name} (grouped)`;
     
     if (!acc[sellerId]) {
       acc[sellerId] = {

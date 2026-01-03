@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_CHECKOUT, DELETE_CHECKOUT_LINES } from "@/lib/graphql/mutations";
 import { useMemo, useState } from "react";
+import { getCheckoutLineGroup } from "@/lib/checkout/grouping";
 
 interface CartSummaryProps {
   checkout: any;
@@ -27,8 +28,9 @@ export function CartSummary({ checkout }: CartSummaryProps) {
     const lines: any[] = checkout?.lines || [];
     const groups = new Map<string, { sellerId: string; sellerName: string; lines: any[] }>();
     for (const line of lines) {
-      const sellerId = line?.variant?.product?.seller?.id || "no-seller";
-      const sellerName = line?.variant?.product?.seller?.storeName || "Unknown Seller";
+      const group = getCheckoutLineGroup(line);
+      const sellerId = group.id;
+      const sellerName = group.mode === "seller" ? group.name : `${group.name} (grouped)`;
       const existing = groups.get(sellerId);
       if (existing) existing.lines.push(line);
       else groups.set(sellerId, { sellerId, sellerName, lines: [line] });

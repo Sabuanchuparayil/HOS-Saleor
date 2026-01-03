@@ -3,6 +3,7 @@
 import { formatPrice } from "@/lib/utils";
 import Image from "next/image";
 import { useMemo } from "react";
+import { getCheckoutLineGroup } from "@/lib/checkout/grouping";
 
 interface CheckoutSummaryProps {
   checkout: any;
@@ -19,9 +20,10 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
     if (!checkout.lines) return {};
     
     return checkout.lines.reduce((acc: any, line: any) => {
-      const sellerId = line.variant?.product?.seller?.id || "no-seller";
-      const sellerName = line.variant?.product?.seller?.storeName || "Unknown Seller";
-      const sellerType = line.variant?.product?.seller?.sellerType || "b2c_retail";
+      const group = getCheckoutLineGroup(line);
+      const sellerId = group.id;
+      const sellerName = group.mode === "seller" ? group.name : `${group.name} (grouped)`;
+      const sellerType = group.type || "unknown";
       
       if (!acc[sellerId]) {
         acc[sellerId] = {
@@ -94,7 +96,10 @@ export function CheckoutSummary({ checkout }: CheckoutSummaryProps) {
             {sellerGroups.map((group: any) => (
               <div key={group.seller.id} className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {group.seller.name} ({group.seller.type === "b2b_wholesale" ? "B2B" : "B2C"})
+                  {group.seller.name}{" "}
+                  {group.seller.type && group.seller.type !== "unknown"
+                    ? `(${group.seller.type === "b2b_wholesale" ? "B2B" : "B2C"})`
+                    : ""}
                 </span>
                 <span className="font-medium">
                   {formatPrice(group.subtotal.amount, group.subtotal.currency)}
