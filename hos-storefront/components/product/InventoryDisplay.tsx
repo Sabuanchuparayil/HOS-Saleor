@@ -17,8 +17,10 @@ export function InventoryDisplay({ product, selectedVariant }: InventoryDisplayP
                   product.defaultVariant || 
                   product.variants?.[0];
 
-  const stockQuantity = variant?.stockQuantity || 0;
-  const isAvailable = variant?.isAvailable ?? (stockQuantity > 0);
+  // Saleor exposes `quantityAvailable` (channel-aware) and `stocks` (per-warehouse).
+  // Our backend doesn't expose `stockQuantity`/`isAvailable`, so derive from `quantityAvailable`.
+  const stockQuantity = variant?.quantityAvailable ?? 0;
+  const isAvailable = stockQuantity > 0;
   
   // Get country-specific stock if available
   const countryStock = product.countrySpecificStock?.[currentCountry] || null;

@@ -97,8 +97,7 @@ export const GET_PRODUCT_BY_SLUG = gql`
             id
             name
             sku
-            stockQuantity
-            isAvailable
+            quantityAvailable
             pricing {
               price {
                 gross {

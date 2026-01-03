@@ -28,6 +28,7 @@ export interface ProductVariant {
   id: string;
   name: string;
   sku?: string;
+  quantityAvailable?: number;
   pricing?: {
     price?: {
       gross?: Money;
