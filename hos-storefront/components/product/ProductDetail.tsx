@@ -28,6 +28,27 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     skip: !slug,
   });
 
+  const product = (data as any)?.products?.edges?.[0]?.node;
+
+  // Generate JSON-LD structured data.
+  // Must be declared before any conditional returns to keep hook ordering stable.
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+    const jsonLd = generateProductJSONLD(product as any);
+    if (!jsonLd) {
+      return;
+    }
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+    return () => {
+      script.parentNode?.removeChild(script);
+    };
+  }, [product]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -45,7 +66,6 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     );
   }
 
-  const product = (data as any)?.products?.edges?.[0]?.node;
   if (!product) {
     return (
       <div className="text-center py-12">
@@ -53,20 +73,6 @@ export function ProductDetail({ slug }: ProductDetailProps) {
       </div>
     );
   }
-
-  // Generate JSON-LD structured data
-  useEffect(() => {
-    const jsonLd = generateProductJSONLD(product as any);
-    if (jsonLd) {
-      const script = document.createElement("script");
-      script.type = "application/ld+json";
-      script.text = JSON.stringify(jsonLd);
-      document.head.appendChild(script);
-      return () => {
-        script.parentNode?.removeChild(script);
-      };
-    }
-  }, [product]);
 
   const breadcrumbItems = [
     { label: "Products", href: "/products" },
