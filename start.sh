@@ -104,14 +104,6 @@ python3 manage.py migrate --noinput || {
     exit 1
 }
 
-# Explicitly run marketplace migrations (in case they weren't detected in the general migrate)
-echo ""
-echo "Running marketplace migrations explicitly..."
-python3 manage.py migrate marketplace --noinput || {
-    echo "WARNING: Marketplace migrations failed or already applied"
-    # Don't exit - continue startup even if marketplace migrations have issues
-}
-
 echo ""
 echo "Migrations completed successfully!"
 
