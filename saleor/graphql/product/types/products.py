@@ -169,6 +169,7 @@ from ..sorters import MediaSortingInput, ProductVariantSortingInput
 from .channels import ProductChannelListing, ProductVariantChannelListing
 from .digital_contents import DigitalContent
 from ...marketplace.enums import ProductApprovalStatusEnum
+from ...marketplace.dataloaders import SellerByIdLoader
 
 destination_address_argument = graphene.Argument(
     account_types.AddressInput,
@@ -1164,6 +1165,13 @@ class Product(ChannelContextType[models.Product]):
         if category_id is None:
             return None
         return CategoryByIdLoader(info.context).load(category_id)
+
+    @staticmethod
+    def resolve_seller(root: ChannelContext[models.Product], info):
+        seller_id = getattr(root.node, "seller_id", None)
+        if not seller_id:
+            return None
+        return SellerByIdLoader(info.context).load(seller_id)
 
     @staticmethod
     def resolve_description_json(root: ChannelContext[models.Product], _info):

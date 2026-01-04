@@ -443,8 +443,8 @@ def create_settlements_for_order(order: "Order") -> list["SellerSettlement"]:
 
     settlements = []
     for seller, seller_lines in lines_by_seller.items():
-        # Skip if seller is not active
-        if not seller.is_active:
+        # Skip if seller is None or not active
+        if not seller or not seller.is_active:
             continue
 
         # Check if settlement already exists for this seller and order
