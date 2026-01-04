@@ -105,20 +105,24 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
   const handleContinue = async (data: AddressFormData) => {
     // Require method selection when shipping is required
     if (checkout?.isShippingRequired !== false) {
-      if (!selectedShippingMethodId) {
+      // If no shipping methods are configured/available, allow continuing as a fallback.
+      // This prevents checkout from being blocked in misconfigured environments.
+      if (shippingMethods.length > 0 && !selectedShippingMethodId) {
         alert("Please select a shipping method.");
         return;
       }
 
       try {
-        await updateDeliveryMethod({
-          variables: {
-            checkoutId: checkout.id,
-            deliveryMethodId: selectedShippingMethodId,
-          },
-        });
-        if (refetchCheckout) {
-          await refetchCheckout();
+        if (shippingMethods.length > 0 && selectedShippingMethodId) {
+          await updateDeliveryMethod({
+            variables: {
+              checkoutId: checkout.id,
+              deliveryMethodId: selectedShippingMethodId,
+            },
+          });
+          if (refetchCheckout) {
+            await refetchCheckout();
+          }
         }
       } catch (error) {
         console.error("Error updating delivery method:", error);
@@ -291,6 +295,13 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
             </p>
           )}
 
+          {addressSaved && shippingMethods.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No shipping methods are available for this address. You can continue to payment,
+              but shipping costs may be calculated later.
+            </p>
+          )}
+
           {shippingMethods.length > 0 && (
             <div className="space-y-3">
               {shippingMethods.map((method: any) => {
@@ -340,7 +351,7 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
               disabled={
                 deliveryUpdating ||
                 (checkout?.isShippingRequired !== false &&
-                  (shippingMethods.length === 0 || !selectedShippingMethodId))
+                  (shippingMethods.length > 0 && !selectedShippingMethodId))
               }
               onClick={handleSubmit(handleContinue)}
               className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
@@ -349,7 +360,9 @@ export function ShippingAddress({ checkout, onSubmit, refetchCheckout }: Shippin
                 ? "Selecting shipping..."
                 : shippingSelectedName
                 ? "Continue to Payment"
-                : "Select Shipping & Continue"}
+                : shippingMethods.length > 0
+                ? "Select Shipping & Continue"
+                : "Continue to Payment"}
             </button>
           </div>
         </div>
