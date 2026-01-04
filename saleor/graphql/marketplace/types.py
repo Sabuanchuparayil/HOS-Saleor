@@ -48,6 +48,10 @@ class Seller(ModelObjectType[models.Seller]):
     tax_origin_address = graphene.Field("saleor.graphql.account.types.Address")
     channel = graphene.Field("saleor.graphql.channel.types.Channel")
     logistics_config = graphene.Field("saleor.graphql.marketplace.types.SellerLogisticsConfig")
+    discount_config = graphene.Field(
+        "saleor.graphql.marketplace.types.SellerDiscountConfig",
+        description="Seller-specific discount configuration (marketplace).",
+    )
     created_at = DateTime(required=True)
     updated_at = DateTime(required=True)
 
@@ -93,6 +97,7 @@ class Seller(ModelObjectType[models.Seller]):
         connection_name = get_database_connection_name(info.context)
         qs = product_models.Product.objects.using(connection_name).filter(seller=root)
         
+        channel_obj = None
         # Apply channel filtering if provided
         if channel:
             from ...channel.models import Channel as ChannelModel
@@ -109,10 +114,25 @@ class Seller(ModelObjectType[models.Seller]):
             except ChannelModel.DoesNotExist:
                 qs = product_models.Product.objects.none()
         
-        # Apply visibility filtering
+        # Apply visibility filtering:
+        # - seller owner/staff can see all their products (including pending)
+        # - others see only storefront-visible products
         from ..utils import get_user_or_app_from_context
         requestor = get_user_or_app_from_context(info.context)
-        qs = qs.visible_to_user(requestor, channel)
+        if requestor and hasattr(requestor, "pk"):
+            is_seller_staff = (
+                root.owner_id == requestor.pk
+                or root.staff.filter(pk=requestor.pk).exists()
+            )
+        else:
+            is_seller_staff = False
+        if not is_seller_staff:
+            # visible_to_user expects a Channel object (or None), not a slug string.
+            qs = qs.visible_to_user(
+                requestor,
+                channel_obj,
+                limited_channel_access=bool(channel),
+            )
         
         # Wrap in ChannelContext
         channel_contexts = [
@@ -168,6 +188,14 @@ class Seller(ModelObjectType[models.Seller]):
             return None
 
     @staticmethod
+    def resolve_discount_config(root: models.Seller, info):
+        """Resolve discount configuration for this seller."""
+        try:
+            return root.discount_config
+        except Exception:
+            return None
+
+    @staticmethod
     def resolve_analytics(root: models.Seller, info, period=None, seller_type=None):
         from saleor.marketplace.utils import (
             calculate_seller_earnings_total,
@@ -216,6 +244,26 @@ class Seller(ModelObjectType[models.Seller]):
             order_count=order_count,
             platform_fee_total=Money(platform_fee_total, currency),
         )
+
+
+class SellerDiscountConfig(ModelObjectType[models.SellerDiscountConfig]):
+    """Seller-specific discount configuration."""
+
+    class Meta:
+        description = "Seller-specific discount configuration (marketplace)."
+        model = models.SellerDiscountConfig
+        interfaces = [relay.Node]
+        doc_category = DOC_CATEGORY_MARKETPLACE
+
+    id = graphene.GlobalID(required=True)
+    max_discount_percentage = Decimal()
+    min_order_value_for_discount = Decimal()
+    allow_sku_level_discounts = graphene.Boolean(required=True)
+    allow_category_level_discounts = graphene.Boolean(required=True)
+    allow_seller_level_discounts = graphene.Boolean(required=True)
+    discount_rules = JSONString()
+    created_at = DateTime(required=True)
+    updated_at = DateTime(required=True)
 
 
 class SellerAnalytics(graphene.ObjectType):
@@ -564,6 +612,14 @@ class ReturnRequestCountableConnection(CountableConnection):
 
     class Meta:
         node = ReturnRequest
+        doc_category = DOC_CATEGORY_MARKETPLACE
+
+
+class ReturnPolicyCountableConnection(CountableConnection):
+    """Connection type for ReturnPolicy list queries."""
+
+    class Meta:
+        node = ReturnPolicy
         doc_category = DOC_CATEGORY_MARKETPLACE
 
 
