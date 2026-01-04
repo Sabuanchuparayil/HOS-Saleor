@@ -109,6 +109,16 @@ class Voucher(ModelWithMetadata):
 
     only_for_staff = models.BooleanField(default=False)
 
+    # Marketplace: optionally scope voucher to a single seller.
+    seller = models.ForeignKey(
+        "marketplace.Seller",
+        related_name="vouchers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="If set, this voucher can only be applied to the seller's products.",
+    )
+
     discount_value_type = models.CharField(
         max_length=10,
         choices=DiscountValueType.CHOICES,
@@ -330,6 +340,15 @@ class Promotion(ModelWithMetadata):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     last_notification_scheduled_at = models.DateTimeField(null=True, blank=True)
+    # Marketplace: optionally scope promotion to a single seller.
+    seller = models.ForeignKey(
+        "marketplace.Seller",
+        related_name="promotions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="If set, this promotion applies only to products from this seller.",
+    )
     objects = PromotionManager()
 
     class Meta:

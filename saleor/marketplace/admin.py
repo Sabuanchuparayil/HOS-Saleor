@@ -41,6 +41,50 @@ from .models_loyalty import (
 )
 
 
+class SellerLogisticsConfigInline(admin.StackedInline):
+    """Inline editor for a seller's one-to-one logistics configuration."""
+
+    model = SellerLogisticsConfig
+    fk_name = "seller"
+    can_delete = False
+    extra = 0
+    autocomplete_fields = ["primary_fulfillment_center"]
+    filter_horizontal = ["shipping_zones"]
+    fieldsets = (
+        (
+            "Fulfillment",
+            {
+                "fields": (
+                    "fulfillment_method",
+                    "primary_fulfillment_center",
+                    "handling_time_days",
+                )
+            },
+        ),
+        (
+            "Shipping",
+            {
+                "fields": (
+                    "shipping_provider",
+                    "free_shipping_threshold",
+                    "shipping_zones",
+                    "custom_shipping_methods",
+                )
+            },
+        ),
+        ("Integration", {"fields": ("logistics_partner_integration",)}),
+    )
+
+
+class SellerDomainInline(admin.TabularInline):
+    """Inline list of domains for a seller."""
+
+    model = SellerDomain
+    extra = 0
+    fields = ("domain", "is_primary", "status", "ssl_enabled", "verified_at")
+    readonly_fields = ("verified_at",)
+
+
 @admin.register(Seller)
 class SellerAdmin(admin.ModelAdmin):
     """Admin interface for Seller model."""
@@ -106,6 +150,7 @@ class SellerAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ["staff"]
     autocomplete_fields = ["owner", "tax_origin_address", "channel"]
+    inlines = [SellerLogisticsConfigInline, SellerDomainInline]
 
 
 @admin.register(SellerDomain)

@@ -281,6 +281,25 @@ def validate_voucher_for_checkout(
     from ...checkout import base_calculations
     from ...checkout.utils import calculate_checkout_quantity
 
+    # Marketplace: if voucher is scoped to a seller, require that the checkout contains
+    # products from a single seller (the scoped one). This keeps voucher semantics
+    # consistent with Saleor's single-voucher-per-checkout model and avoids partially
+    # applying an order-level voucher across multiple sellers.
+    if getattr(voucher, "seller_id", None):
+        sellers_in_checkout = {
+            getattr(line_info.product, "seller", None)
+            for line_info in lines
+            if getattr(line_info, "product", None) is not None
+        }
+        sellers_in_checkout.discard(None)
+        if len(sellers_in_checkout) != 1:
+            raise NotApplicable(
+                "This voucher can only be used when your cart contains items from a single seller."
+            )
+        only_seller = next(iter(sellers_in_checkout))
+        if only_seller.pk != voucher.seller_id:
+            raise NotApplicable("This voucher is not valid for the selected seller.")
+
     quantity = calculate_checkout_quantity(lines)
     subtotal = base_calculations.base_checkout_subtotal(
         lines,
@@ -306,6 +325,7 @@ def validate_voucher_in_order(
         return
 
     from ...order.utils import get_total_quantity
+    from ...marketplace.utils import group_lines_by_seller
 
     subtotal = order.subtotal
     quantity = get_total_quantity(lines)
@@ -314,8 +334,20 @@ def validate_voucher_in_order(
     prices_entered_with_tax = tax_configuration.prices_entered_with_tax
     value = subtotal.gross if prices_entered_with_tax else subtotal.net
 
+    # Marketplace: seller-scoped voucher must match order lines seller.
+    voucher = order.voucher
+    if getattr(voucher, "seller_id", None):
+        sellers_in_order = {s for s in group_lines_by_seller(list(lines)).keys() if s}
+        if len(sellers_in_order) != 1:
+            raise NotApplicable(
+                "This voucher can only be used when the order contains items from a single seller."
+            )
+        only_seller = next(iter(sellers_in_order))
+        if only_seller.pk != voucher.seller_id:
+            raise NotApplicable("This voucher is not valid for the selected seller.")
+
     validate_voucher(
-        order.voucher, value, quantity, customer_email, channel, order.user
+        voucher, value, quantity, customer_email, channel, order.user
     )
 
 

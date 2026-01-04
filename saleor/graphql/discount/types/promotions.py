@@ -22,6 +22,7 @@ from ..dataloaders import (
     PromotionRulesByPromotionIdLoader,
 )
 from ..enums import PromotionTypeEnum, RewardTypeEnum, RewardValueTypeEnum
+from ...marketplace.dataloaders import SellerByIdLoader
 from .promotion_events import PromotionEvent
 
 
@@ -49,6 +50,10 @@ class Promotion(ModelObjectType[models.Promotion]):
         PromotionEvent,
         description="The list of events associated with the promotion.",
     )
+    seller = graphene.Field(
+        "saleor.graphql.marketplace.types.Seller",
+        description="Seller this promotion is scoped to (marketplace).",
+    )
 
     class Meta:
         description = (
@@ -66,6 +71,13 @@ class Promotion(ModelObjectType[models.Promotion]):
     @staticmethod
     def resolve_events(root: models.Promotion, info: ResolveInfo):
         return PromotionEventsByPromotionIdLoader(info.context).load(root.id)
+
+    @staticmethod
+    def resolve_seller(root: models.Promotion, info: ResolveInfo):
+        seller_id = getattr(root, "seller_id", None)
+        if not seller_id:
+            return None
+        return SellerByIdLoader(info.context).load(seller_id)
 
 
 class PromotionRule(ModelObjectType[models.PromotionRule]):

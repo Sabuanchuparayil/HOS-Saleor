@@ -6,6 +6,7 @@ from django.db import transaction
 
 from .....discount import PromotionType, events, models
 from .....discount.utils.promotion import mark_catalogue_promotion_rules_as_dirty
+from .....marketplace.models import Seller as SellerModel
 from .....permission.enums import DiscountPermissions
 from .....plugins.manager import PluginsManager
 from .....webhook.event_types import WebhookEventAsyncType
@@ -85,6 +86,16 @@ class PromotionUpdate(DeprecatedModelMutation):
         cls, info: ResolveInfo, instance: models.Promotion, data: dict, **kwargs
     ):
         cleaned_input = super().clean_input(info, instance, data, **kwargs)
+
+        if "seller" in cleaned_input:
+            seller_id = cleaned_input.pop("seller")
+            if seller_id:
+                cleaned_input["seller"] = cls.get_node_or_error(
+                    info, seller_id, only_type=SellerModel, field="seller"
+                )
+            else:
+                cleaned_input["seller"] = None
+
         start_date = cleaned_input.get("start_date") or instance.start_date
         end_date = cleaned_input.get("end_date") or instance.end_date
         try:

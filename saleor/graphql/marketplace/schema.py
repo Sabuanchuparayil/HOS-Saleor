@@ -53,6 +53,8 @@ from .resolvers import (
       resolve_product_submission,
       resolve_product_submissions,
       resolve_recently_viewed_products,
+      resolve_return_policy,
+      resolve_return_policies,
       resolve_return_request,
       resolve_return_requests,
       resolve_seller,
@@ -83,6 +85,7 @@ from .types import (
     FulfillmentCenter,
     NewsletterSubscription,
     ProductSubmission,
+    ReturnPolicy,
     ReturnRequest,
     Seller,
     Theme,
@@ -609,3 +612,37 @@ class ReturnRequestQueries(graphene.ObjectType):
         
         qs = resolve_return_requests(info, order_id=order_id, status=status)
         return create_connection_slice(qs, info, kwargs, ReturnRequestCountableConnection)
+
+
+class ReturnPolicyQueries(graphene.ObjectType):
+    """Queries for return policies."""
+
+    return_policy = BaseField(
+        ReturnPolicy,
+        id=graphene.Argument(graphene.ID, description="ID of the return policy."),
+        description="Look up a return policy by ID.",
+        doc_category=DOC_CATEGORY_MARKETPLACE,
+    )
+    return_policies = ConnectionField(
+        "saleor.graphql.marketplace.types.ReturnPolicyCountableConnection",
+        seller_id=graphene.Argument(graphene.ID, description="Filter by seller ID."),
+        product_id=graphene.Argument(graphene.ID, description="Filter by product ID."),
+        is_active=graphene.Argument(graphene.Boolean, description="Filter by active flag."),
+        description="List of return policies.",
+        doc_category=DOC_CATEGORY_MARKETPLACE,
+    )
+
+    @staticmethod
+    def resolve_return_policy(_root, info, id):
+        return resolve_return_policy(info, id)
+
+    @staticmethod
+    def resolve_return_policies(
+        _root, info, seller_id=None, product_id=None, is_active=None, **kwargs
+    ):
+        from .types import ReturnPolicyCountableConnection
+
+        qs = resolve_return_policies(
+            info, seller_id=seller_id, product_id=product_id, is_active=is_active
+        )
+        return create_connection_slice(qs, info, kwargs, ReturnPolicyCountableConnection)

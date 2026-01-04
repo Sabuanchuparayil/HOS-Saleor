@@ -1,13 +1,16 @@
 """Middleware for marketplace multi-tenancy."""
 
 from typing import TYPE_CHECKING, Optional
-from urllib.parse import urlparse
 
 from django.http import HttpRequest, HttpResponse
+from django.core.cache import cache
 from django.utils.deprecation import MiddlewareMixin
 
 if TYPE_CHECKING:
     from ..marketplace.models import Seller
+
+
+SELLER_LOOKUP_CACHE_TTL_SECONDS = 300  # 5 minutes
 
 
 class SellerTenantMiddleware(MiddlewareMixin):
@@ -26,7 +29,22 @@ class SellerTenantMiddleware(MiddlewareMixin):
             return None
 
         # Remove port if present
-        host = host.split(":")[0]
+        host = host.split(":")[0].strip().lower()
+
+        cache_key = f"marketplace:seller_by_host:{host}"
+        _MISSING = object()
+        cached = cache.get(cache_key, _MISSING)
+        if cached is not _MISSING:
+            # We cache "no seller" as an empty string to allow negative caching.
+            if cached == "":
+                request.marketplace_seller = None  # type: ignore[attr-defined]
+                return None
+            from ..marketplace.models import Seller
+
+            request.marketplace_seller = (
+                Seller.objects.filter(pk=cached, status="active").first()
+            )  # type: ignore[attr-defined]
+            return None
 
         # Import here to avoid circular imports
         from ..marketplace.models import Seller, SellerDomain
@@ -34,7 +52,7 @@ class SellerTenantMiddleware(MiddlewareMixin):
         # Try to find seller by domain (exact match or subdomain)
         seller = None
 
-        # First, try exact domain match
+        # First, try exact domain match (only primary domains for reliable multi-tenancy)
         try:
             from ..marketplace.models import SellerDomainStatus
             
@@ -62,6 +80,7 @@ class SellerTenantMiddleware(MiddlewareMixin):
 
         # Attach seller to request
         request.marketplace_seller = seller  # type: ignore[attr-defined]
+        cache.set(cache_key, seller.pk if seller else "", SELLER_LOOKUP_CACHE_TTL_SECONDS)
 
         return None
 

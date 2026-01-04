@@ -10,6 +10,7 @@ from graphql.error import GraphQLError
 
 from .....channel import models as channel_models
 from .....discount import PromotionType, events, models
+from .....marketplace.models import Seller as SellerModel
 from .....permission.enums import DiscountPermissions
 from .....plugins.manager import PluginsManager
 from .....webhook.event_types import WebhookEventAsyncType
@@ -73,6 +74,10 @@ class PromotionInput(BaseInputObjectType):
         description="The start date of the promotion in ISO 8601 format."
     )
     end_date = DateTime(description="The end date of the promotion in ISO 8601 format.")
+    seller = graphene.ID(
+        required=False,
+        description="Optional seller to scope this promotion to (marketplace).",
+    )
 
 
 class PromotionCreateInput(PromotionInput):
@@ -120,6 +125,15 @@ class PromotionCreate(DeprecatedModelMutation):
         cls, info: ResolveInfo, instance: models.Promotion, data: dict, **kwargs
     ):
         cleaned_input = super().clean_input(info, instance, data, **kwargs)
+
+        if "seller" in cleaned_input:
+            seller_id = cleaned_input.pop("seller")
+            if seller_id:
+                cleaned_input["seller"] = cls.get_node_or_error(
+                    info, seller_id, only_type=SellerModel, field="seller"
+                )
+            else:
+                cleaned_input["seller"] = None
 
         errors: defaultdict[str, list[ValidationError]] = defaultdict(list)
         start_date = cleaned_input.get("start_date") or instance.start_date

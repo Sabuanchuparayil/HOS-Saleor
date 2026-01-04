@@ -10,7 +10,7 @@ from uuid import UUID
 import graphene
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Exists, OuterRef, QuerySet
+from django.db.models import Exists, OuterRef, QuerySet, Q
 from prices import Money
 
 from ...channel.models import Channel
@@ -522,6 +522,12 @@ def get_variants_to_promotion_rules_map(
     """
     rules_info_per_variant: dict[int, list[PromotionRuleInfo]] = defaultdict(list)
 
+    # Marketplace: when a promotion is scoped to a seller, it should only apply to
+    # variants whose product belongs to that seller.
+    variant_seller_map: dict[int, int | None] = dict(
+        variant_qs.values_list("id", "product__seller_id")
+    )
+
     promotions = Promotion.objects.using(
         settings.DATABASE_CONNECTION_REPLICA_NAME
     ).active()
@@ -536,7 +542,7 @@ def get_variants_to_promotion_rules_map(
     ).filter(
         Exists(promotions.filter(id=OuterRef("promotion_id"))),
         Exists(promotion_rule_variants.filter(promotionrule_id=OuterRef("pk"))),
-    )
+    ).select_related("promotion")
     rule_to_channel_ids_map = _get_rule_to_channel_ids_map(rules)
     rules_in_bulk = rules.in_bulk()
 
@@ -547,6 +553,11 @@ def get_variants_to_promotion_rules_map(
         if not rule:
             continue
         variant_id = promotion_rule_variant.productvariant_id
+        promotion_seller_id = getattr(rule.promotion, "seller_id", None)
+        if promotion_seller_id:
+            variant_seller_id = variant_seller_map.get(variant_id)
+            if variant_seller_id != promotion_seller_id:
+                continue
         rules_info_per_variant[variant_id].append(
             PromotionRuleInfo(
                 rule=rule,
@@ -569,6 +580,38 @@ def fetch_promotion_rules_for_checkout_or_order(
 
     applicable_rules = []
     promotions = Promotion.objects.active()
+
+    # Marketplace: order-level promotions scoped to a seller should only be considered
+    # when the checkout/order contains items from a single seller (the scoped one).
+    # Otherwise, only global promotions (seller is NULL) are eligible.
+    only_seller_id: int | None = None
+    sellers: set[int] = set()
+    if isinstance(instance, Checkout):
+        seller_ids = (
+            CheckoutLine.objects.using(database_connection_name)
+            .filter(checkout_id=instance.pk)
+            .select_related("variant__product")
+            .values_list("variant__product__seller_id", flat=True)
+            .distinct()
+        )
+        sellers = {sid for sid in seller_ids if sid is not None}
+    else:
+        seller_pairs = (
+            instance.lines.using(database_connection_name)
+            .select_related("variant__product")
+            .values_list("seller_id", "variant__product__seller_id")
+            .distinct()
+        )
+        for line_seller_id, product_seller_id in seller_pairs:
+            sid = line_seller_id or product_seller_id
+            if sid is not None:
+                sellers.add(sid)
+
+    if len(sellers) == 1:
+        only_seller_id = next(iter(sellers))
+        promotions = promotions.filter(Q(seller__isnull=True) | Q(seller_id=only_seller_id))
+    else:
+        promotions = promotions.filter(seller__isnull=True)
     rules = (
         PromotionRule.objects.using(database_connection_name)
         .filter(Exists(promotions.filter(id=OuterRef("promotion_id"))))

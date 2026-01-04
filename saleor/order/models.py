@@ -598,6 +598,22 @@ class OrderLine(ModelWithMetadata):
     )
     is_gift = models.BooleanField(default=False)
 
+    # Marketplace denormalization
+    seller = models.ForeignKey(
+        "marketplace.Seller",
+        related_name="order_lines",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Seller for this line (marketplace).",
+    )
+    seller_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Denormalized seller name for this line (marketplace).",
+    )
+
     currency = models.CharField(
         max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH,
     )

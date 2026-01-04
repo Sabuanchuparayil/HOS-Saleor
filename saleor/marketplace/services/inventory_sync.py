@@ -47,12 +47,22 @@ def sync_inventory_for_variant(
     ).first()
 
     if not stock:
-        # No stock record, create with zero quantity
         quantity_available = 0
         quantity_reserved = 0
     else:
-        quantity_available = stock.quantity_allocated or 0
-        quantity_reserved = stock.quantity_reserved or 0
+        # "available" should reflect current on-hand quantity, and "reserved"
+        # should reflect reserved quantity. Allocation is not availability.
+        quantity_available = stock.quantity or 0
+        # Calculate reserved quantity from stock reservations (Stock model doesn't have quantity_reserved)
+        from ...warehouse.models import Reservation
+        from django.db.models import Sum
+        from django.db.models.functions import Coalesce
+        
+        quantity_reserved = (
+            Reservation.objects.filter(stock=stock)
+            .filter(reserved_until__gt=timezone.now())
+            .aggregate(total=Coalesce(Sum("quantity_reserved"), 0))["total"]
+        )
 
     # Create or update inventory sync record
     with transaction.atomic():
@@ -125,7 +135,7 @@ def get_aggregated_inventory_for_variant(
         "total_reserved": total_reserved,
         "total_quantity": total_available + total_reserved,
         "by_center": {
-            sync.fulfillment_center.name: {
+            (sync.fulfillment_center.name if sync.fulfillment_center else str(sync.fulfillment_center_id)): {
                 "available": sync.quantity_available,
                 "reserved": sync.quantity_reserved,
             }

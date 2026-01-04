@@ -393,18 +393,25 @@ def resolve_return_requests(
     """Resolve return requests, optionally filtered by order and status."""
     from ..utils import get_user_or_app_from_context
     from saleor.permission.auth_filters import is_app, is_staff_user
+    from django.db.models import Q
 
     qs = models.ReturnRequest.objects.using(
         get_database_connection_name(info.context)
     ).all()
 
-    # Users can only see their own return requests (unless staff/app)
+    # Visibility:
+    # - staff/app: all return requests
+    # - customer: their own return requests
+    # - seller owner/staff: return requests for their order lines
     user = info.context.user
     requestor = get_user_or_app_from_context(info.context)
     # Apps and staff users can see all return requests
     is_staff_or_app = is_app(info.context) or is_staff_user(info.context)
     if user and user.is_authenticated and not is_staff_or_app:
-        qs = qs.filter(user=user)
+        seller_ids = models.Seller.objects.using(
+            get_database_connection_name(info.context)
+        ).filter(Q(owner=user) | Q(staff=user)).values_list("id", flat=True)
+        qs = qs.filter(Q(user=user) | Q(order_line__seller_id__in=seller_ids))
 
     if order_id:
         from ..order.types import Order
@@ -422,6 +429,7 @@ def resolve_return_request(info: ResolveInfo, id: str):
     from .types import ReturnRequest
     from ..utils import get_user_or_app_from_context
     from saleor.permission.auth_filters import is_app, is_staff_user
+    from django.db.models import Q
 
     _, db_id = from_global_id_or_error(id, ReturnRequest)
     return_request = models.ReturnRequest.objects.using(
@@ -435,10 +443,89 @@ def resolve_return_request(info: ResolveInfo, id: str):
         # Apps and staff users can see any return request
         is_staff_or_app = is_app(info.context) or is_staff_user(info.context)
         if user and user.is_authenticated:
-            if not is_staff_or_app and return_request.user_id != user.id:
-                return None
+            if not is_staff_or_app:
+                # Customer can see their own requests; seller owner/staff can see
+                # requests for their lines.
+                seller_ids = models.Seller.objects.using(
+                    get_database_connection_name(info.context)
+                ).filter(Q(owner=user) | Q(staff=user)).values_list("id", flat=True)
+                if return_request.user_id != user.id and (
+                    return_request.order_line_id is None
+                    or return_request.order_line.seller_id not in set(seller_ids)  # type: ignore[union-attr]
+                ):
+                    return None
 
     return return_request
+
+
+def resolve_return_policies(
+    info: ResolveInfo,
+    seller_id: Optional[str] = None,
+    product_id: Optional[str] = None,
+    is_active: Optional[bool] = None,
+):
+    """Resolve return policies (best-effort visibility rules)."""
+    from ..utils import get_user_or_app_from_context
+    from saleor.permission.auth_filters import is_app, is_staff_user
+    from django.db.models import Q
+
+    connection_name = get_database_connection_name(info.context)
+    qs = models.ReturnPolicy.objects.using(connection_name).all()
+
+    if seller_id:
+        from .types import Seller
+        _, seller_pk = from_global_id_or_error(seller_id, Seller)
+        qs = qs.filter(seller_id=seller_pk)
+
+    if product_id:
+        from ..product.types.products import Product
+        _, product_pk = from_global_id_or_error(product_id, Product)
+        qs = qs.filter(product_id=product_pk)
+
+    if is_active is not None:
+        qs = qs.filter(is_active=is_active)
+
+    # Visibility: staff/app can see all; sellers can see their own (including inactive);
+    # everyone else sees only active policies.
+    if not (is_app(info.context) or is_staff_user(info.context)):
+        user = info.context.user
+        if user and user.is_authenticated:
+            seller_ids = models.Seller.objects.using(connection_name).filter(
+                Q(owner=user) | Q(staff=user)
+            ).values_list("id", flat=True)
+            qs = qs.filter(Q(is_active=True) | Q(seller_id__in=seller_ids))
+        else:
+            qs = qs.filter(is_active=True)
+
+    return qs.order_by("seller_id", "product_id", "return_period_days")
+
+
+def resolve_return_policy(info: ResolveInfo, id: str):
+    """Resolve a return policy by ID with visibility rules."""
+    from .types import ReturnPolicy
+    from ..utils import get_user_or_app_from_context
+    from saleor.permission.auth_filters import is_app, is_staff_user
+    from django.db.models import Q
+
+    connection_name = get_database_connection_name(info.context)
+    _, db_id = from_global_id_or_error(id, ReturnPolicy)
+    policy = models.ReturnPolicy.objects.using(connection_name).filter(id=db_id).first()
+    if not policy:
+        return None
+
+    if is_app(info.context) or is_staff_user(info.context):
+        return policy
+
+    user = info.context.user
+    if not user or not user.is_authenticated:
+        return policy if policy.is_active else None
+
+    seller_ids = models.Seller.objects.using(connection_name).filter(
+        Q(owner=user) | Q(staff=user)
+    ).values_list("id", flat=True)
+    if policy.is_active or (policy.seller_id and policy.seller_id in set(seller_ids)):
+        return policy
+    return None
 
 
 def resolve_seller_orders(info: ResolveInfo, seller_id: str):

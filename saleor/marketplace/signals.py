@@ -129,6 +129,31 @@ def handle_seller_type_change(sender, instance: Seller, **kwargs):
                     )
                 except SellerLogisticsConfig.DoesNotExist:
                     pass
+                
+                # Update shipping methods if needed (deactivate B2B-specific methods for B2C, etc.)
+                from .models import SellerShippingMethod
+                if instance.seller_type == "b2c_retail":
+                    # B2C sellers typically use standard shipping methods
+                    # Deactivate any B2B-specific methods if they exist
+                    deactivated_count = SellerShippingMethod.objects.filter(
+                        seller=instance,
+                        is_active=True
+                    ).update(is_active=False)
+                    if deactivated_count > 0:
+                        logger.info(
+                            f"Deactivated {deactivated_count} shipping method(s) for seller {instance.store_name} "
+                            f"due to type change to B2C"
+                        )
+                elif instance.seller_type == "b2b_wholesale":
+                    # B2B sellers may need bulk shipping discounts
+                    # This is handled via logistics config custom_shipping_methods
+                    pass
+                
+                # Update pricing rules if needed (B2B may have different pricing structures)
+                # Pricing rules are managed separately, no automatic changes needed here
+                logger.info(
+                    f"Seller type changed from {old_instance.seller_type} to {instance.seller_type} for {instance.store_name}"
+                )
         except Seller.DoesNotExist:
             pass
 
@@ -192,7 +217,40 @@ def handle_product_submission(sender, instance: ProductSubmission, created: bool
         logger.info(
             f"Product {instance.product.name} submitted by seller {instance.seller.store_name} for approval"
         )
-        # TODO: Send notification to admin for approval
+        # Send notification to admin for approval
+        try:
+            from ..account.models import StaffNotificationRecipient
+            from django.core.mail import send_mail
+            from django.conf import settings
+            from django.contrib.sites.models import Site
+            
+            site = Site.objects.get_current()
+            admin_recipients = StaffNotificationRecipient.objects.filter(
+                active=True,
+                staff__is_active=True
+            ).values_list("staff__email", flat=True)
+            
+            if admin_recipients:
+                subject = f"[{site.name}] New Product Submission Requires Approval"
+                message = f"""
+A new product has been submitted for approval:
+
+Product: {instance.product.name}
+Seller: {instance.seller.store_name}
+Submitted: {instance.submitted_at.strftime('%Y-%m-%d %H:%M:%S')}
+
+Please review and approve/reject this product in the admin panel.
+"""
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=list(admin_recipients),
+                    fail_silently=True,
+                )
+                logger.info(f"Sent product submission notification to {len(admin_recipients)} admin(s)")
+        except Exception as e:
+            logger.error(f"Error sending product submission notification: {e}")
 
 
 @receiver(post_save, sender=ProductSubmission)
@@ -205,10 +263,105 @@ def handle_product_approval(sender, instance: ProductSubmission, **kwargs):
 
         if instance.status == "approved":
             logger.info(f"Product {instance.product.name} approved")
-            # TODO: Notify seller of approval
+            # Notify seller of approval
+            try:
+                from django.core.mail import send_mail
+                from django.conf import settings
+                from django.contrib.sites.models import Site
+                
+                if instance.seller.owner and instance.seller.owner.email:
+                    site = Site.objects.get_current()
+                    subject = f"[{site.name}] Product Approved: {instance.product.name}"
+                    message = f"""
+Hello {instance.seller.owner.get_full_name() or instance.seller.store_name},
+
+Your product "{instance.product.name}" has been approved and is now live on {site.name}.
+
+You can view it in your seller dashboard.
+
+Best regards,
+{site.name} Team
+"""
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[instance.seller.owner.email],
+                        fail_silently=True,
+                    )
+                    logger.info(f"Sent approval notification to seller {instance.seller.store_name}")
+            except Exception as e:
+                logger.error(f"Error sending product approval notification: {e}")
         elif instance.status == "rejected":
             logger.info(f"Product {instance.product.name} rejected")
-            # TODO: Notify seller of rejection with admin notes
+            # Notify seller of rejection with admin notes
+            try:
+                from django.core.mail import send_mail
+                from django.conf import settings
+                from django.contrib.sites.models import Site
+                
+                if instance.seller.owner and instance.seller.owner.email:
+                    site = Site.objects.get_current()
+                    subject = f"[{site.name}] Product Rejected: {instance.product.name}"
+                    admin_notes = instance.admin_notes or "No specific reason provided."
+                    message = f"""
+Hello {instance.seller.owner.get_full_name() or instance.seller.store_name},
+
+Your product "{instance.product.name}" has been rejected.
+
+Admin Notes:
+{admin_notes}
+
+Please review the requirements and resubmit if needed.
+
+Best regards,
+{site.name} Team
+"""
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[instance.seller.owner.email],
+                        fail_silently=True,
+                    )
+                    logger.info(f"Sent rejection notification to seller {instance.seller.store_name}")
+            except Exception as e:
+                logger.error(f"Error sending product rejection notification: {e}")
+        elif instance.status == "requires_revision":
+            logger.info(f"Product {instance.product.name} requires revision")
+            # Notify seller that revision is needed
+            try:
+                from django.core.mail import send_mail
+                from django.conf import settings
+                from django.contrib.sites.models import Site
+                
+                if instance.seller.owner and instance.seller.owner.email:
+                    site = Site.objects.get_current()
+                    subject = f"[{site.name}] Product Revision Required: {instance.product.name}"
+                    admin_notes = instance.admin_notes or "Please review and update the product information."
+                    message = f"""
+Hello {instance.seller.owner.get_full_name() or instance.seller.store_name},
+
+Your product "{instance.product.name}" requires revision before it can be approved.
+
+Admin Notes:
+{admin_notes}
+
+Please update the product and resubmit for approval.
+
+Best regards,
+{site.name} Team
+"""
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[instance.seller.owner.email],
+                        fail_silently=True,
+                    )
+                    logger.info(f"Sent revision notification to seller {instance.seller.store_name}")
+            except Exception as e:
+                logger.error(f"Error sending product revision notification: {e}")
 
 
 @receiver(post_save, sender="order.OrderLine")

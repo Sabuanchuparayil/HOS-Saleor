@@ -34,6 +34,7 @@ from ..dataloaders import (
     VoucherChannelListingsByVoucherIdLoader,
 )
 from ..enums import DiscountValueTypeEnum, VoucherTypeEnum
+from ...marketplace.dataloaders import SellerByIdLoader
 
 
 class VoucherChannelListing(ModelObjectType[models.VoucherChannelListing]):
@@ -177,6 +178,10 @@ class Voucher(ChannelContextType[models.Voucher]):
             DiscountPermissions.MANAGE_DISCOUNTS,
         ],
     )
+    seller = graphene.Field(
+        "saleor.graphql.marketplace.types.Seller",
+        description="Seller this voucher is scoped to (marketplace).",
+    )
 
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
@@ -300,6 +305,13 @@ class Voucher(ChannelContextType[models.Voucher]):
         root: ChannelContext[models.Voucher], info: ResolveInfo
     ):
         return VoucherChannelListingsByVoucherIdLoader(info.context).load(root.node.id)
+
+    @staticmethod
+    def resolve_seller(root: ChannelContext[models.Voucher], info: ResolveInfo):
+        seller_id = getattr(root.node, "seller_id", None)
+        if not seller_id:
+            return None
+        return SellerByIdLoader(info.context).load(seller_id)
 
 
 class VoucherCountableConnection(CountableConnection):

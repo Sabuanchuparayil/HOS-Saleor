@@ -46,18 +46,12 @@ def get_applicable_shipping_methods_for_seller(
     # Filter shipping methods by zones
     methods = ShippingMethod.objects.filter(shipping_zone__in=shipping_zones)
 
-        # Apply seller-type-specific filtering
-        if seller.seller_type == "b2b_wholesale":
-            # B2B sellers may have negotiated rates or bulk shipping discounts
-            # Filter by seller-specific shipping methods if available
-            from .models import SellerShippingMethod
-            seller_methods = SellerShippingMethod.objects.filter(
-                seller=seller, is_active=True
-            )
-            if seller_methods.exists():
-                # Use seller-specific methods (we'll need to map these to standard methods)
-                # For now, return standard methods
-                pass
+    # Apply seller-type-specific filtering
+    if seller.seller_type == "b2b_wholesale":
+        # B2B sellers may have negotiated rates or bulk shipping discounts.
+        # SellerShippingMethod is handled in MarketplaceShippingPlugin (external methods).
+        # Keep standard methods unchanged here.
+        pass
 
     # Check free shipping threshold
     if (

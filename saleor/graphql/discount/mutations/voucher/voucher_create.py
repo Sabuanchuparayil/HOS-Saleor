@@ -5,6 +5,7 @@ from django.db import transaction
 from .....core.utils.promo_code import generate_promo_code, is_available_promo_code
 from .....discount import models
 from .....discount.error_codes import DiscountErrorCode
+from .....marketplace.models import Seller as SellerModel
 from .....permission.enums import DiscountPermissions
 from .....webhook.event_types import WebhookEventAsyncType
 from ....core import ResolveInfo
@@ -95,6 +96,10 @@ class VoucherInput(BaseInputObjectType):
     usage_limit = graphene.Int(
         description="Limit number of times this voucher can be used in total."
     )
+    seller = graphene.ID(
+        required=False,
+        description="Optional seller to scope this voucher to (marketplace).",
+    )
 
     class Meta:
         doc_category = DOC_CATEGORY_DISCOUNTS
@@ -128,6 +133,15 @@ class VoucherCreate(DeprecatedModelMutation):
     def clean_input(cls, info: ResolveInfo, instance, data, **kwargs):
         cls.clean_codes(data)
         cleaned_input = super().clean_input(info, instance, data, **kwargs)
+
+        if "seller" in cleaned_input:
+            seller_id = cleaned_input.pop("seller")
+            if seller_id:
+                cleaned_input["seller"] = cls.get_node_or_error(
+                    info, seller_id, only_type=SellerModel, field="seller"
+                )
+            else:
+                cleaned_input["seller"] = None
 
         return cleaned_input
 

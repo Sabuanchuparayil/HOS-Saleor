@@ -169,8 +169,55 @@ class ProductType(ModelWithMetadata):
 
 
 class Product(SeoModel, ModelWithMetadata, ModelWithExternalReference):
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "pending", "Pending Approval"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+        REQUIRES_REVISION = "requires_revision", "Requires Revision"
+
     product_type = models.ForeignKey(
         ProductType, related_name="products", on_delete=models.CASCADE
+    )
+    seller = models.ForeignKey(
+        "marketplace.Seller",
+        related_name="products",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Seller who owns/submitted this product (marketplace).",
+    )
+    approval_status = models.CharField(
+        max_length=32,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        help_text="Approval status for marketplace product workflow.",
+    )
+    is_exclusive_to_seller = models.BooleanField(
+        default=False,
+        help_text="Whether this product (and its SKUs) are exclusive to this seller.",
+    )
+    # Product data collection fields
+    rrp = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Recommended retail price (baseline). Channel-level prior price may override.",
+    )
+    compliance_data = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Regulatory/compliance information (JSON).",
+    )
+    country_specific_pricing = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Per-country pricing overrides (JSON).",
+    )
+    country_specific_stock = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Per-country inventory overrides (JSON).",
     )
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
@@ -237,6 +284,8 @@ class Product(SeoModel, ModelWithMetadata, ModelWithExternalReference):
             models.Index(
                 fields=["category_id", "slug"],
             ),
+            BTreeIndex(fields=["approval_status"], name="product_approval_status_idx"),
+            BTreeIndex(fields=["seller"], name="product_seller_idx"),
         ]
         indexes.extend(ModelWithMetadata.Meta.indexes)
 

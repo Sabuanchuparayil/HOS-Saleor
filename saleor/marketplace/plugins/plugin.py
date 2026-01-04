@@ -142,6 +142,15 @@ class SellerAwareTaxPlugin(BasePlugin):
         if not seller:
             return previous_value
 
+        # B2B / tax-exempt customer handling
+        # Saleor supports tax exemption flags on checkout/order; if set, we should
+        # not override prices with taxes here.
+        try:
+            if getattr(checkout_info.checkout, "tax_exemption", False):
+                return previous_value
+        except Exception:
+            pass
+
         # Determine which country to use for tax calculation
         # For origin-based tax systems, use seller's tax origin address
         # For destination-based tax systems, use shipping address country
@@ -250,6 +259,13 @@ class SellerAwareTaxPlugin(BasePlugin):
 
         if not seller:
             return previous_value
+
+        # B2B / tax-exempt customer handling
+        try:
+            if getattr(order, "tax_exemption", False):
+                return previous_value
+        except Exception:
+            pass
 
         # Determine which country to use for tax calculation
         # For origin-based tax systems, use seller's tax origin address

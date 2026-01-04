@@ -168,6 +168,7 @@ from ..resolvers import (
 from ..sorters import MediaSortingInput, ProductVariantSortingInput
 from .channels import ProductChannelListing, ProductVariantChannelListing
 from .digital_contents import DigitalContent
+from ...marketplace.enums import ProductApprovalStatusEnum
 
 destination_address_argument = graphene.Argument(
     account_types.AddressInput,
@@ -923,6 +924,31 @@ class Product(ChannelContextType[models.Product]):
         ProductVariant, description="Default variant of the product."
     )
     rating = graphene.Float(description="Rating of the product.")
+    seller = graphene.Field(
+        "saleor.graphql.marketplace.types.Seller",
+        description="Seller that owns/submitted this product (marketplace).",
+    )
+    approval_status = ProductApprovalStatusEnum(
+        required=True,
+        description="Approval status of the product in marketplace workflow.",
+    )
+    is_exclusive_to_seller = graphene.Boolean(
+        required=True,
+        description="Whether this product is exclusive to its seller (marketplace).",
+    )
+    rrp = graphene.Field(
+        "saleor.graphql.core.scalars.Decimal",
+        description="Recommended retail price (baseline).",
+    )
+    compliance_data = JSONString(
+        description="Regulatory/compliance information (JSON).",
+    )
+    country_specific_pricing = JSONString(
+        description="Per-country pricing overrides (JSON).",
+    )
+    country_specific_stock = JSONString(
+        description="Per-country inventory overrides (JSON).",
+    )
     channel = graphene.String(
         description=(
             "Channel given to retrieve this product. Also used by federation "

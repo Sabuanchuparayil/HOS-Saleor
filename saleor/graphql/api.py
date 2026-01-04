@@ -75,6 +75,7 @@ try:
         SellerShippingMethodQueries,
         InventorySyncQueries,
         ReturnRequestQueries,
+        ReturnPolicyQueries,
         LoyaltyPointsBalanceQueries,
         LoyaltyPointsTransactionQueries,
         BadgeQueries,
@@ -99,6 +100,7 @@ try:
         SellerShippingMethodQueries = SellerShippingMethodQueries
         InventorySyncQueries = InventorySyncQueries
         ReturnRequestQueries = ReturnRequestQueries
+        ReturnPolicyQueries = ReturnPolicyQueries
         LoyaltyPointsBalanceQueries = LoyaltyPointsBalanceQueries
         LoyaltyPointsTransactionQueries = LoyaltyPointsTransactionQueries
         BadgeQueries = BadgeQueries

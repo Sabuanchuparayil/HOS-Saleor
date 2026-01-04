@@ -394,6 +394,8 @@ def _create_line_for_order(
         quantity=quantity,
         variant=variant,
         is_gift=checkout_line.is_gift,
+        seller=getattr(product, "seller", None),
+        seller_name=getattr(getattr(product, "seller", None), "store_name", "") or "",
         unit_price=unit_price,  # money field not supported by mypy_django_plugin
         undiscounted_unit_price=undiscounted_unit_price,  # money field not supported by mypy_django_plugin # noqa: E501
         undiscounted_total_price=undiscounted_total_price,  # money field not supported by mypy_django_plugin # noqa: E501

@@ -275,6 +275,8 @@ JWT_MANAGER_PATH = os.environ.get(
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # Marketplace multi-tenancy: resolve seller context from domain/subdomain
+    "saleor.marketplace.middleware.SellerTenantMiddleware",
     "saleor.core.middleware.jwt_refresh_token_middleware",
 ]
 
@@ -324,6 +326,8 @@ INSTALLED_APPS = [
     "saleor.app",
     "saleor.thumbnail",
     "saleor.schedulers",
+    # Marketplace
+    "saleor.marketplace",
     # External apps
     "django_measurement",
     "mptt",
@@ -877,6 +881,7 @@ FEDERATED_QUERY_MAX_ENTITIES = int(os.environ.get("FEDERATED_QUERY_MAX_ENTITIES"
 BUILTIN_PLUGINS = [
     "saleor.plugins.avatax.plugin.DeprecatedAvataxPlugin",
     "saleor.plugins.webhook.plugin.WebhookPlugin",
+    "saleor.plugins.marketplace_shipping.plugin.MarketplaceShippingPlugin",
     "saleor.payment.gateways.dummy.plugin.DeprecatedDummyGatewayPlugin",
     "saleor.payment.gateways.dummy_credit_card.plugin.DeprecatedDummyCreditCardGatewayPlugin",
     "saleor.payment.gateways.stripe.plugin.StripeGatewayPlugin",

@@ -240,6 +240,7 @@ def calculate_seller_earnings(
 def calculate_seller_order_totals(
     order_lines: list["OrderLine"],
     seller: "Seller",
+    allocated_order_discount: Decimal = Decimal("0.00"),
 ) -> dict[str, Decimal]:
     """Calculate order totals for a specific seller from order lines.
 
@@ -270,6 +271,11 @@ def calculate_seller_order_totals(
         for line in seller_lines
         if hasattr(line, "total_price") and line.total_price
     )
+
+    # Marketplace: allocate order-level discounts (e.g. ENTIRE_ORDER vouchers / order
+    # promotions) across sellers to get a fair per-seller net total.
+    if allocated_order_discount:
+        order_total = max(order_total - allocated_order_discount, Decimal("0.00"))
 
     # Calculate platform fee
     platform_fee = calculate_platform_fee(
@@ -415,6 +421,26 @@ def create_settlements_for_order(order: "Order") -> list["SellerSettlement"]:
         if line.seller_id:
             lines_by_seller[line.seller].append(line)
 
+    # Compute order-level discount total (best-effort) and allocate across sellers.
+    # This intentionally does NOT include line-level discounts, as those are already
+    # reflected in `line.total_price`.
+    allocated_discounts_by_seller: dict = {}
+    try:
+        from ..discount import DiscountType
+
+        order_level_discount_total = (
+            order.discounts.filter(
+                type__in=[DiscountType.VOUCHER, DiscountType.PROMOTION]
+            ).aggregate(total=models.Sum("amount_value"))["total"]
+            or Decimal("0.00")
+        )
+        if order_level_discount_total and lines_by_seller:
+            allocated_discounts_by_seller = allocate_discount_by_seller(
+                lines_by_seller, Decimal(order_level_discount_total), "proportional"
+            )
+    except Exception:
+        allocated_discounts_by_seller = {}
+
     settlements = []
     for seller, seller_lines in lines_by_seller.items():
         # Skip if seller is not active
@@ -429,7 +455,10 @@ def create_settlements_for_order(order: "Order") -> list["SellerSettlement"]:
             continue
 
         # Calculate totals
-        totals = calculate_seller_order_totals(seller_lines, seller)
+        allocated_discount = allocated_discounts_by_seller.get(seller, Decimal("0.00"))
+        totals = calculate_seller_order_totals(
+            seller_lines, seller, allocated_order_discount=allocated_discount
+        )
 
         if totals["order_total"] <= 0:
             continue

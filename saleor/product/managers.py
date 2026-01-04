@@ -110,7 +110,12 @@ class ProductsQueryset(models.QuerySet):
             return self.all()
         if not channel:
             return self.none()
-        return self.published_with_variants(channel)
+        # Public/storefront visibility: only show products that are approved in the
+        # marketplace workflow (or legacy products where approval_status isn't used).
+        qs = self.published_with_variants(channel)
+        if "approval_status" in {f.name for f in self.model._meta.get_fields()}:
+            qs = qs.filter(approval_status="approved")
+        return qs
 
     def annotate_publication_info(self, channel: Channel):
         return self.annotate_is_published(channel).annotate_published_at(channel)
